@@ -1,2 +1,3 @@
 # biovision
-Sources for biovision DAQ devices
+
+Here are required binaries and Sources for biovision DAQ devices.
