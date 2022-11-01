@@ -1,7 +1,7 @@
 # matlab mex binary and examples
 
 we put matlab binary and example scripts into the same directory.
-to run the example, you need to have biovisionMultiDaq.dll in Your path.
+to run the examples, you need to have biovisionMultiDaq.dll in your path.
 
 ## prerequisites
 
