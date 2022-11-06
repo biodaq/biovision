@@ -1,19 +1,33 @@
 /* demo1.c
-   copyright: Tantor GmbH 2022
    (requires a connected multidaq device)
    Demonstrates simple data aquisition using the C interface.
    it connects to the first available device and collects data for 5 second
 */
 
+#include "serialportinfo.h"
 #include <biovisionMultiDaq.h>
+/*
+copyright: Tantor GmbH, 2022
+	little demo for a multidaq device
+*/
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h> // for Sleep() only
+#include <string.h>
+#ifdef _WIN32
+#include <windows.h> // for Sleep only
+#else
+#include <unistd.h>
+void Sleep(int ms) // Sleep for Linux
+{
+    usleep(ms * 1000); // That are microseconds
+}
+#endif
 
 // You have to provide a Receive Buffer
 char    dat[65536];          // buffer for data in the loop
-int32_t bigbuf[1024 * 1024]; // buffer for all collected data 4 byte aligned
+int32_t bigbuf[1024 * 1024]; // buffer for all collected data
+char    result[1024];
 
 int main(int argc, char **argv)
 {
@@ -24,11 +38,10 @@ int main(int argc, char **argv)
     const int16_t *p16 = (int16_t *)bigbuf;
     int            bytesReceived;
     int            isBinaryAnswer;
+    const char    *tmp = multiDaqListDevices(); // call without initializing the driver is possible
+    strncpy(result, tmp, sizeof(result) - 1);   // keep a copy here for strtok
 
-    char        result[1024 + 1];
-    const char *tmp = multiDaqListDevices(); // call without initializing the driver is possible
-    strncpy(result, tmp, 1024);              // keep a copy here for strtok
-    printf("Result listdevices:\n%s\n\n", result);
+    printf("Result listdevices(%d):\n%s\n\n", (int)strlen(result), result);
     if (strlen(result) == 0)
     {
         printf("no device found: exit now\n");
@@ -87,6 +100,7 @@ int main(int argc, char **argv)
         goto err_exit;
     }
 #endif
+
 
     int  nChan      = 2; // 1 .. 8 possible
     int  samplesize = nChan * 2;
