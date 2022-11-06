@@ -1,8 +1,9 @@
-/* biovisionMultiDaq.h
+/* copyright: Tantor GmbH, 2022
+   biovisionMultiDaq.h
    h file for the biovisionMultiDaq.dll
    You will need a 64 bit compiler
-   We recommend to use the mingw64 compiler suite
-   but nevertheless it should work with other C or C++ compilers
+   We recommend to use the mingw64 compiler suite on Windows, andd gcc 64 bit on Linux
+   but nevertheless it works with other C or C++ compilers
    the interface is pure C, no name mangling is used
 */
 
@@ -14,7 +15,11 @@
 #endif
 
 /* Define calling convention in one place, for convenience. */
+#ifdef _WIN32
 #define DLLCALL __cdecl
+#else
+#define DLLCALL
+#endif
 
 /* Make sure functions are exported with C linkage under C++ compilers. */
 #ifdef __cplusplus
@@ -63,9 +68,17 @@ extern "C"
     // gets the last errormessage, if no error occurred this is an empty string
     char *DLLCALL multiDaqGetLastError(int dev); // call will clear the errormessage
 
-    // handle with care, they are for synchronisation purposes of multiple devices
+    // clear and get fatal system Errors, which are not monitored by GetLastError()
+    void DLLCALL multiDaqClearSystemErrors(void);
+    // returns empty string, if all ok or list of hexadecimal error numbers
+    // Value 0x0 tells: no error on that channel
+    char *DLLCALL multiDaqGetSystemErrors(void);
+
+    // handle with care, they are designed for synchronisation purposes of multiple devices
+    // commands bettween will fire in the high priority thread after EnableTX()
+    // and the Timestamp collector resumes
     int DLLCALL multiDaqDisableTx(void); // disable all transmissions for all devices
-    int DLLCALL multiDaqEnableTx(void);  // enables again, commands bettween will fire in the high priority thread
+    int DLLCALL multiDaqEnableTx(void);  // enables again
 
     // litte helper for Timing, runs at 10 MHz on windows and 1 GHz on linux
     int64_t DLLCALL multiDaqGetTicks(void);
@@ -75,11 +88,11 @@ extern "C"
     // after multiDaqEnableTx(), the timestamps will be measured after the call
     // so you have to wait a couple of ms to get the right values
     // *data will be filled with the timestamps (4 x int64_t =32 bytes)
-    // and memory must be provided by the user
+    // memory must be provided by the user
     void DLLCALL multiDaqGetTimeStampsFromSynchronizedGroup(int dev, int64_t *data);
 
     // little helpers to get information from biovision devices
-    //
+    // returns cstring with linefeed delimited lines [or empty cstring (no device detected)]
     const char *DLLCALL multiDaqListDevices();
 
     // little helper to get the version string of the dll
