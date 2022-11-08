@@ -42,10 +42,11 @@ extern "C"
     int DLLCALL multiDaqDeInit();
 
     // opens a channel (dev = 0..3 is allowed)
-    // you need a id String, which you can extract from the answer of multiDaqListDevices()
+    // you need either an id String, which you can extract from the answer of multiDaqListDevices()
     // idString: "id\tsystemlocation\tserialnumber"
     // where id is the devicename ("multi" or "bio"),systemlocation the COMPORT i.e "COMx"
     // and serialnumber is the serialnumber of the device
+    // or simply the device port, which you can find out with the device manager
     int DLLCALL multiDaqOpen(int dev, char *idString);
     int DLLCALL multiDaqClose(int dev);
 
