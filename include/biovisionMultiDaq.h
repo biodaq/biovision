@@ -54,19 +54,24 @@ extern "C"
     // in case binaryblock *bytesReceived hold the block size
     // otherwise you get a pointer to a null terminated string
     // user has to provide memory for *bytesReceived and *isBinaryAnswer
+    // returns NULL pointer in case of an error
     char *DLLCALL multiDaqSendCmd(int dev, char *cmd, int *bytesReceived, int *isBinaryAnswer);
-    char *DLLCALL multiDaqSendCmdWhileStreaming(int dev, char *cmd); // fire and forget
-    int *DLLCALL  multiDaqSendSCPIbinBlock(int dev, char *data, int len);
+
+    int DLLCALL multiDaqSendCmdWhileStreaming(int dev, char *cmd); // fire and forget
+    int DLLCALL multiDaqSendSCPIbinBlock(int dev, char *data, int len);
 
     // convenience function to get the oversampling factor od ADC (only multidaq can deal with n!=1)
-    int DLLCALL multiDaqGetAdcOversampling(int dev);
+    int DLLCALL multiDaqGetAdcOversampling(int dev); // 1 or 2, values are set in the 'conf:sca:ove' cmd
+    int DLLCALL multiDaqGetSampleSize(int dev);      // in bytes, values are set in 'conf:dev' command
 
     // returns number of bytes, they will be a multiple of minaligned
+    // returns -1 for fatal error and -2 for timeouted, (-2 is quite normal after the 'abort' command)
     // minaligned should be the calculated samplesize
     // user has to provide the buffer *data
     int DLLCALL multiDaqGetStreamingData(int dev, char *data, int minaligned, int maxSize);
 
     // gets the last errormessage, if no error occurred this is an empty string
+    // returns NULL pointer in case of an error
     char *DLLCALL multiDaqGetLastError(int dev); // call will clear the errormessage
 
     // clear and get fatal system Errors, which are not monitored by GetLastError()
@@ -90,7 +95,7 @@ extern "C"
     // so you have to wait a couple of ms to get the right values
     // *data will be filled with the timestamps (4 x int64_t =32 bytes)
     // memory must be provided by the user
-    void DLLCALL multiDaqGetTimeStampsFromSynchronizedGroup(int dev, int64_t *data);
+    int DLLCALL multiDaqGetTimeStampsFromSynchronizedGroup(int dev, int64_t *data);
 
     // little helpers to get information from biovision devices
     // returns cstring with linefeed delimited lines [or empty cstring (no device detected)]
@@ -102,7 +107,21 @@ extern "C"
     /* Exported variables. */
     // extern DLLAPI int foo;
     // extern DLLAPI int bar;
+    int DLLCALL  get();
+    void DLLCALL set(int);
 
+    int DLLCALL tMsgInit(void);
+    int DLLCALL tMsgRegisterAsMaster(void);
+    int DLLCALL tMsgRegisterAsSlave(void);
+    int DLLCALL tMsgUnregisterAsMaster(int);
+    int DLLCALL tMsgUnregisterAsSlave(int);
+    int DLLCALL tMsgSendMsgToSlave(char *, int address);
+    int DLLCALL tMsgSendMsgToAllSlaves(char *);
+    int DLLCALL tMsgSendMsgToMaster(char *, int address);
+    int DLLCALL tMsgGetMasterMsg(char *, int address);
+    int DLLCALL tMsgGetSlaveMsg(char *, int address);
+    int DLLCALL tMsgGetTimeStamps(int64_t *, int address);
+    int DLLCALL tMsgClearAllSlaveMessages();
 #ifdef __cplusplus
 } // __cplusplus defined.
 #endif

@@ -1,15 +1,34 @@
-/* demo1.c
-   (requires a connected multidaq device)
+/* demo1.c (requires a connected multidaq device)
+
+   copyright: Tantor GmbH, 2022
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are met:
+   1. Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer
+      in the documentation and/or other materials provided with the distribution.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+/*
    Demonstrates simple data aquisition using the C interface.
    it connects to the first available device and collects data for 5 second
 */
 
-#include "serialportinfo.h"
 #include <biovisionMultiDaq.h>
-/*
-copyright: Tantor GmbH, 2022
-	little demo for a multidaq device
-*/
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,7 +104,7 @@ int main(int argc, char **argv)
     // set the datarate
     ans = multiDaqSendCmd(0, "conf:sca:rat 1000", &bytesReceived, &isBinaryAnswer); // a nonzero response indicates an error
     // if(bytesReceived) // this or next line, it is the same
-    if (strlen(ans))
+    if ((ans == NULL) || strlen(ans != 0))
     {
         printf("---- Error by set rate: %s\n", ans);
         goto err_exit;
@@ -101,21 +120,28 @@ int main(int argc, char **argv)
     }
 #endif
 
-
     int  nChan      = 2; // 1 .. 8 possible
     int  samplesize = nChan * 2;
     char buf[100];
     sprintf(buf, "conf:dev 0,%d,0", nChan);
-    multiDaqSendCmd(0, buf, &bytesReceived, &isBinaryAnswer);
+    if (multiDaqSendCmd(0, buf, &bytesReceived, &isBinaryAnswer) == NULL)
+    {
+        printf("SendCmd failed!\n");
+        goto err_exit;
+    }
     if (bytesReceived)
     {
         printf("Error configuring the device\n");
         goto err_exit;
     }
-    Sleep(20); // configuring will take some milliseconds
+    Sleep(100); // configuring will take 50 milliseconds
 
     // start the aquisition
-    multiDaqSendCmdWhileStreaming(0, "init");
+    if (multiDaqSendCmdWhileStreaming(0, "init"))
+    {
+        printf("Error sending command\n");
+        goto err_exit;
+    }
 
     //------------------ aquisition loop
     p8 = (char *)bigbuf;
@@ -139,7 +165,10 @@ int main(int argc, char **argv)
     }
 
     // stop the aquisition, after that, the command multiDaqGetStreamingData() will timeout automaticly
-    multiDaqSendCmdWhileStreaming(0, "abort");
+    if (multiDaqSendCmdWhileStreaming(0, "abort"))
+    {
+        printf("Error sending Command\n");
+    }
     multiDaqClose(0);
     multiDaqDeInit();
 
