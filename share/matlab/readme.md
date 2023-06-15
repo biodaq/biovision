@@ -6,7 +6,7 @@ to run the examples, you need to have biovisionMultiDaq.dll in your path.
 ## prerequisites
 
 * Win10 64 bit
-* Matlab Version > R2018a
+* Matlab Version >= R2018a
 * compatible biovisionMultiDaq.dll
 
 examples and binary were tested with R2021a only.
