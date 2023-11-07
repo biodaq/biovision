@@ -11,19 +11,24 @@ import time
 
 class multiDaq:
     # ------------------------------------------------------------------------
-    def __init__(self, dllFullName=""):
+    def __init__(self, dllPathName=""):
 
         self.isDebug = False
         my_os = platform.system()
-        if len(dllFullName) == 0:
+        if len(dllPathName) == 0:
             if my_os == "Linux":
                 self.mydll = ctypes.CDLL("/usr/local/lib/libbiovisionMultiDaq.so")
             else:
                 self.mydll = ctypes.CDLL(
-                    "c:\\Program Files\\biovision\\multidaq\\biovisionMultiDaq.dll"
+                    "c:\\bin\\biovisionMultiDaq.dll"
                 )
         else:
-            self.mydll = ctypes.CDLL(dllFullName)
+            if my_os == "Linux":
+                self.mydll = ctypes.CDLL(dllPathName + "/libbiovisionMultiDaq.so")
+            else:
+                self.mydll = ctypes.CDLL(
+                    dllPathName + "/biovisionMultiDaq.dll"
+                )
         self.masterID = -1
         self.mydll.multiDaqInit.argtypes = (ctypes.c_int,)
         self.mydll.multiDaqInit.restype = ctypes.c_int
@@ -303,13 +308,14 @@ class multiDaq:
         return self.mydll.tMsgSendMsgToAllSlaves(msg)
 
     # ------------------------------------------------------------------------
-    def getMsgResponseCmd(self, dev, cmd):
+    def getMsgResponseCmd(self, dev, cmd, timeout=1):
         # print("test(", dev, ")", cmd)
         ans = self.sendMsgToSlave(dev, cmd)
         if not ans:
             print("send failed")
             return False
         xCnt = 0
+        t0 = time.time()
         while True:
             ans = self.getMsgFromSlave(dev)
             if not ans:
@@ -317,6 +323,9 @@ class multiDaq:
                 continue
             else:
                 break
+            if time.time() - t0 > timeout:
+                print("Message timeouted")
+                return b""
         # print("Cnt=", xCnt)
         return ans
 
@@ -336,7 +345,7 @@ class multiDaq:
                 )
             return ans  # it is an integer
         else:
-            ans = self.mydll.multiDaqSendCmd(dev, cmd, byref(a), byref(b))
+            ans = self.mydll.multiDaqSendCmd(dev, cmd, ctypes.byref(a), ctypes.byref(b))
             if ans == ctypes.c_char_p(0):
                 raise Exception("class multiDaq(): multiDaqSendCmd() failed")
             if b.value != ctypes.c_int(0).value:
@@ -387,23 +396,29 @@ class multiDaq:
 
 
 if __name__ == "__main__":
-
-    if platform.system() == "Linux":
-        try:
-            mydriver = multiDaq("/usr/local/lib/libbiovisionMultiDaq.so")
-        except Exception:
-            print("Could not start driver")
-            exit(1)
+    import os
+    
+    if False: # for debug purposes
+        if platform.system() == "Linux":
+            try:
+                mydriver = multiDaq("/usr/local/lib/libbiovisionMultiDaq.so")
+            except Exception:
+                print("Could not start driver")
+                exit(1)
+        else:
+            try:
+                mydriver = multiDaq(
+                    "c:\\projects\\multiDaq\\build-windows\\multiDaq\\biovisionMultiDaq.dll"
+                )
+            except Exception:
+                print("Could not start driver")
+                exit(1)
+        print("DLL loaded successfully")
     else:
-        try:
-            mydriver = multiDaq(
-                "c:\\projects\\multiDaq\\multiDaq\\build-windows\\multiDaq\\biovisionMultiDaq.dll"
-            )
-        except Exception:
-            print("Could not start driver")
-            exit(1)
-    print("DLL loaded successfully")
-    # uncomment next line, if you want to see what happens inside
+        pathname = os.getcwd()
+        mydriver = multiDaq(pathname)
+      
+    # uncomment next line, if you do not want to see what happens inside
     # mydriver.setDebugFlag(True)
 
     ans = mydriver.getVersion()

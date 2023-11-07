@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     // set the datarate
     ans = multiDaqSendCmd(0, "conf:sca:rat 1000", &bytesReceived, &isBinaryAnswer); // a nonzero response indicates an error
     // if(bytesReceived) // this or next line, it is the same
-    if ((ans == NULL) || strlen(ans != 0))
+    if ((ans == NULL) || strlen(ans) != 0)
     {
         printf("---- Error by set rate: %s\n", ans);
         goto err_exit;
