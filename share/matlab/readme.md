@@ -13,4 +13,16 @@ examples and binary were tested with R2021a only.
 
 ## example description
 
-* info.m: check all devices on USB and print the *idn? string 
+* info.m:  (low level)  
+ check all devices on USB and print the *idn? string
+* multidaq.m: (high level interface for one device)   
+ convenience class for simple measurements
+* demo1.m:  (high level)  
+demo for the convenience class
+* getTdfData.m:  
+utily to read *.tdf files produced by multiDaq.exe.
+* viewTdf.m  
+example how to use getTdfData.m
+
+The low level functions are more powerful and flexibel. You can manage multiple devices and triggers.
+

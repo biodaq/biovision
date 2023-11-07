@@ -1,203 +1,608 @@
 <!DOCTYPE html>
-
-
-<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>multiDaq</title>
-  <style>
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
-  </style>
-  <style type="text/css">html {font-size: 100%;overflow-y: scroll;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100%;}body {color: #444;font-family: Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif;font-size: 12px;line-height: 1.7;padding: 1em;margin: auto;max-width: 82em;background: #fefefe;}a {color: #0645ad;text-decoration: none;}a:visited {color: #0b0080;}a:hover {color: #06e;}a:active {color: #faa700;}a:focus {outline: thin dotted;}*::-moz-selection {background: rgba(255, 255, 0, 0.3);color: #000;}*::selection {background: rgba(255, 255, 0, 0.3);color: #000;}a::-moz-selection {background: rgba(255, 255, 0, 0.3);color: #0645ad;}a::selection {background: rgba(255, 255, 0, 0.3);color: #0645ad;}p {margin: 1em 0;}img {max-width: 100%;}h1,h2,h3,h4,h5,h6 {color: #111;line-height: 125%;margin-top: 2em;font-weight: normal;}h4,h5,h6 {font-weight: bold;}h1 {font-size: 2.5em;}h2 {font-size: 2em;}h3 {font-size: 1.5em;}h4 {font-size: 1.2em;}h5 {font-size: 1em;}h6 {font-size: 0.9em;}blockquote {color: #666666;margin: 0;padding-left: 3em;border-left: 0.5em #EEE solid;}hr {display: block;height: 2px;border: 0;border-top: 1px solid #aaa;border-bottom: 1px solid #eee;margin: 1em 0;padding: 0;}pre,code,kbd,samp {color: #000;font-family: Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif;font-size: 12px;}pre {white-space: pre;white-space: pre-wrap;word-wrap: break-word;}b,strong {font-weight: bold;}dfn {font-style: italic;}ins {background: #ff9;color: #000;text-decoration: none;}mark {background: #ff0;color: #000;font-style: italic;font-weight: bold;}sub,sup {font-size: 75%;line-height: 0;position: relative;vertical-align: baseline;}sup {top: -0.5em;}sub {bottom: -0.25em;}ul,ol {margin: 1em 0;padding: 0 0 0 2em;}li p:last-child {margin-bottom: 0;}ul ul,ol ol {margin: .3em 0;}dl {margin-bottom: 1em;}dt {font-weight: bold;margin-bottom: .8em;}dd {margin: 0 0 .8em 2em;}dd:last-child {margin-bottom: 0;}img {border: 0;-ms-interpolation-mode: bicubic;vertical-align: middle;}figure {display: block;text-align: center;margin: 1em 0;}figure img {border: none;margin: 0 auto;}figcaption {font-size: 0.8em;font-style: italic;margin: 0 0 .8em;}table {margin-bottom: 2em;border-bottom: 1px solid #ddd;border-right: 1px solid #ddd;border-spacing: 0;border-collapse: collapse;}table th {padding: .2em 1em;background-color: #eee;border-top: 1px solid #ddd;border-left: 1px solid #ddd;}table td {padding: .2em 1em;border-top: 1px solid #ddd;border-left: 1px solid #ddd;vertical-align: top;}.author {font-size: 1.2em;text-align: center;}@media only screen and (min-width: 480px) {body {font-size: 14px;}}@media only screen and (min-width: 768px) {body {font-size: 12px;}}@media print {* {background: transparent !important;color: black !important;filter: none !important;-ms-filter: none !important;}body {font-size: 12pt;max-width: 100%;}a,a:visited {text-decoration: underline;}hr {height: 1px;border: 0;border-bottom: 1px solid black;}a[href]:after {content: " (" attr(href) ")";}abbr[title]:after {content: " (" attr(title) ")";}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after {content: "";}pre,blockquote {border: 1px solid #999;padding-right: 1em;page-break-inside: avoid;}tr,img {page-break-inside: avoid;}img {max-width: 100% !important;}@page :left {margin: 15mm 20mm 15mm 10mm;}@page :right {margin: 15mm 10mm 15mm 20mm;}p,h2,h3 {orphans: 3;widows: 3;}h2,h3 {page-break-after: avoid;}}</style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
+<title>multidaq.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
 <h1 id="multidaq-commandset">multiDaq Commandset</h1>
-<hr />
+<hr>
 <h2 id="c-interface">C Interface</h2>
-<p>we provide a h File, the dll itself and a library for linking. The
-dll is compiled with the Mingw64 Compiler Suite. if You use MSVC or
-other compilers, the linking acrobatic is up to You.</p>
+<p>we provide a h File, the dll itself and a library for linking. The dll
+is compiled with the Mingw64 Compiler Suite. if You use MSVC or other
+compilers, the linking acrobatic is up to You.</p>
 <p>The Interface is a pure C Interface, so no name mangling problems are
 expected.</p>
 <p><strong>Prerequisites</strong></p>
 <p>Win 10, 64 bit Version</p>
 <p>64 bit C or C++ Compiler</p>
-<hr />
+<hr>
 <h2 id="python-interface">python Interface</h2>
 <p>in preparation</p>
-<hr />
+<hr>
 <h2 id="matlaboctave-interface">matlab/octave Interface</h2>
 <p>You have acces to the multiDaq devices via a single mex file. The
 mexfile accesses our biovisionMultiDaq.dll, so this dll must be in your
 path. No further driver must be installed.</p>
-<p>The driver will be started by the init command and stopped by the
-deinit command. The driver acts as a highly priorized task and will
-live, until you leave matlab or call the deinit function. After the call
-of the init command functions to access the device can be called.</p>
+<p>The driver will be started by the init command and stopped by the deinit
+command. The driver acts as a highly priorized task and will live, until
+you leave matlab or call the deinit function. After the call of the init
+command functions to access the device can be called.</p>
 <p>The command set of the device is SCPI based. Detailed information is
 found in chapter <a href="#scpi-commands">SCPI commands</a></p>
 <p><strong>format:</strong> biovision_multidaq(command, . . .)</p>
 <p>additional parameter depends on command.</p>
 <h3 id="available-commands">available commands:</h3>
 <ul>
-<li><pre><code>&#39;init&#39;: initializes the driver
-one optional parameter, if set to &#39;debug&#39; the driver will generate additional debug messages on stdout.</code></pre></li>
-<li><pre><code>&#39;deinit&#39;: deinitializes the driver
-no parameter.</code></pre></li>
-<li><pre><code>&#39;listdevices&#39;: list all connected biovision devices
+<li>
+<p>'init': initializes the driver
+one optional parameter, if set to 'debug' the driver will generate additional debug messages on stdout.</p>
+</li>
+<li>
+<p>'deinit': deinitializes the driver
+no parameter.</p>
+</li>
+<li>
+<p>'listdevices': list all connected biovision devices
 no parameter,
 returns cell array of device identifiers with needed information of connected devices.
-The results are intended for use in the open command.</code></pre></li>
-<li><pre><code>&#39;open&#39;: opens a device
-first parameter is the channel number as a string from &#39;1&#39; .. &#39;4&#39;,
-second parameter is the device identifier.</code></pre></li>
-<li><pre><code>&#39;close&#39;: close a device
+The results are intended for use in the open command.</p>
+</li>
+<li>
+<p>'open': opens a device
+first parameter is the channel number as a string from '1' .. '4',
+second parameter is the device identifier.</p>
+</li>
+<li>
+<p>'close': close a device
 one parameter, must be the same as the first parameter
-in the open command</code></pre></li>
-<li><pre><code>&#39;cmd&#39;: transmits a SCPI command to the device
+in the open command</p>
+</li>
+<li>
+<p>'cmd': transmits a SCPI command to the device
 first parameter: channel number
 second parameter: SCPI command
-third optional parameter: if is &#39;stream&#39;, you can fire commands in streaming mode.
-returns char array or uint8 array (if the answer was a SCPI binary block).</code></pre></li>
-<li><pre><code>&#39;get&#39; get available data in streaming mode
+third optional parameter: if is 'stream', you can fire commands in streaming mode.
+returns char array or uint8 array (if the answer was a SCPI binary block).</p>
+</li>
+<li>
+<p>'get' get available data in streaming mode
 first parameter: channel number
-returns double array with captured data.</code></pre></li>
-<li><pre><code>&#39;txqueue&#39;: central control of txqueues of all devices
-one parameter, must be &#39;0&#39; or &#39;1&#39;.
+returns double array with captured data.</p>
+</li>
+<li>
+<p>'txqueue': central control of txqueues of all devices
+one parameter, must be '0' or '1'.
 enables or disables the transmission of all connected devices.
-purpose: synchronisisation of more than one device.</code></pre></li>
-<li><pre><code>&#39;getticks&#39;: get a timestamp
-no parameter, returns an int64 timestamp with 10 MHz clock.</code></pre></li>
-<li><pre><code>&#39;gettimestamps&#39;: get timestamps from a synchronized group
+purpose: synchronisisation of more than one device.</p>
+</li>
+<li>
+<p>'getticks': get a timestamp
+no parameter, returns an int64 timestamp with 10 MHz clock.</p>
+</li>
+<li>
+<p>'gettimestamps': get timestamps from a synchronized group
 one parameter, the channel number.
 get the monitored timestamps of a synchronized start of several devices.
 returns array of 4 int64 timestamps.
-first timestamp is taken when txqueue is set to &#39;1&#39;.
+first timestamp is taken when txqueue is set to '1'.
 second timestamp, when driver transmits the command.
 third timestamp, when driver receives first response.
-forth timestamp, when driver received first valid data.</code></pre></li>
+forth timestamp, when driver received first valid data.</p>
+</li>
 </ul>
-<hr />
+<hr>
 <h2 id="scpi-commands">SCPI commands</h2>
-<p>SCPI = <strong>S</strong>tandard <strong>C</strong>ommands for
-<strong>P</strong>rogrammable <strong>I</strong>nstruments</p>
-<p>We follow this Specification: <a href="https://www.ivifoundation.org/docs/SCPI-99.PDF" class="uri">https://www.ivifoundation.org/docs/SCPI-99.PDF</a></p>
+<p>SCPI = <strong>S</strong>tandard <strong>C</strong>ommands for <strong>P</strong>rogrammable <strong>I</strong>nstruments</p>
+<p>We follow this Specification:
+<a href="https://www.ivifoundation.org/docs/SCPI-99.PDF">https://www.ivifoundation.org/docs/SCPI-99.PDF</a></p>
 <h3 id="scpi-binary-blocks"><strong>scpi binary blocks</strong></h3>
 <p>SCPI binary block format is defined in SCPI specs</p>
-<p>block format: “#nN”,[binary data],“” * n is one character, length of
-N * N is string of n characters defining the length of the block * both
-n and N are decimal numbers</p>
-<h3 id="format-of-a-scpi-command"><strong>format of a SCPI
-command</strong></h3>
+<p>block format: &quot;#nN&quot;,[binary data],&quot;&quot; * n is one character, length of
+N * N is string of n characters defining the length of the block *
+both n and N are decimal numbers</p>
+<h3 id="format-of-a-scpi-command"><strong>format of a SCPI command</strong></h3>
 <p>All SCPI commands without question mark responses only, if an error
 occurrs.</p>
-<p>format: [:]token1:token2:token [param1] , [param2] ….</p>
+<p>format: [:]token1:token2:token [param1] , [param2] ....</p>
 <p>example: *idn?[LF] responses with the identification string</p>
-<p>possible tokens of example command “CONFigure:SCAn:RATe <rate>” does
-the same:</p>
+<p>possible tokens of example command &quot;CONFigure:SCAn:RATe &quot; does the same:</p>
 <ul>
 <li>conf:sca:rat 1000</li>
 <li>configure:sca:rat 1000</li>
 <li>conf:scan:rate 1000</li>
 </ul>
-<p>You have to use the words in uppercase letters or in the whole word.
-If a parameter is a string, it must be enclosed with quotation
-marks.</p>
-<p>example: conf:trig:mode “pulse”,15</p>
-<h3 id="available-commands-1">available commands:</h3>
+<p>You have to use the words in uppercase letters or in the whole word. If
+a parameter is a string, it must be enclosed with quotation marks.</p>
+<p>example: conf:trig:mode &quot;pulse&quot;,15</p>
+<h3 id="available-commands">available commands:</h3>
 <ul>
-<li><pre><code>&quot;CONFigure:SCAn:NUMchans?&quot;
+<li>
+<p>&quot;CONFigure:SCAn:NUMchans?&quot;
 returns numbers of connected devices as a list.
 nADC24,nADC16,nIMU  (or)
-nAdc24,nAdc16,nIMU,nAUX (if an aux device is connected).</code></pre></li>
-<li><pre><code>&quot;CONFigure:IMU:PARAms &lt;nIMU&gt;,&lt;rangeAcc&gt;,&lt;rangeGyro&gt;&quot;
-configures the IMU parameter.</code></pre></li>
-<li><pre><code>&quot;CONFigure:IMU:PARAms? &lt;which_imu&gt;&quot;
-returns list &lt;rangeAcc&gt;,&lt;rangeGyro&gt;.</code></pre></li>
-<li><pre><code>&quot;CONFigure:IMU:availAcc?&quot;
-returns list of possible ranges of the ACC.</code></pre></li>
-<li><pre><code>&quot;CONFigure:IMU:availGyro?&quot;
-returns list of possible ranges of the Gyroscope.</code></pre></li>
-<li><pre><code>&quot;CONFigure:SCAn:RATe?&quot;
-returns configured samplerate.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:BAUD?&quot;
-returns configured Baudrate of the aux device.</code></pre></li>
-<li><pre><code>&quot;CONFigure:SCAn:RATe &lt;rate&gt;&quot;
-configures Samplerate, valid range is 100 ... 1000.</code></pre></li>
-<li><pre><code>&quot;CONFigure:SCAn:OVErsampling&quot;
+nAdc24,nAdc16,nIMU,nAUX (if an aux device is connected).</p>
+</li>
+<li>
+<p>&quot;CONFigure:IMU:PARAms <nIMU>,<rangeAcc>,<rangeGyro>&quot;
+configures the IMU parameter.</p>
+</li>
+<li>
+<p>&quot;CONFigure:IMU:RANGESAcc?&quot;
+returns list of possible ranges of the ACC.</p>
+</li>
+<li>
+<p>&quot;CONFigure:IMU:RANGESGyro?&quot;
+returns list of possible ranges of the Gyroscope.</p>
+</li>
+<li>
+<p>&quot;CONFigure:SCAn:RATe?&quot;
+returns configured samplerate.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:BAUD?&quot;
+returns configured Baudrate of the aux device.</p>
+</li>
+<li>
+<p>&quot;CONFigure:SCAn:RATe <rate>&quot;
+configures Samplerate, valid range is 100 ... 1000.</p>
+</li>
+<li>
+<p>&quot;CONFigure:SCAn:OVErsampling&quot;
 configures the Oversampling Rate of ADC16.
-valid values: 1 or 2.</code></pre></li>
-<li><pre><code>&quot;CONFigure:SCAn:LISt &lt;chan1&gt;,&lt;chan2&gt;,...&quot;
+valid values: 1 or 2.</p>
+</li>
+<li>
+<p>&quot;CONFigure:SCAn:LISt <chan1>,<chan2>,...&quot;
 configures the List of channels.
 default is 0,1,2,3,4,5,6,7 and will be restored, if you close the device
 purpose: set the order of channels
-in contrast to the old biodaq devices, this command will not set the number of channels</code></pre></li>
-<li><pre><code>&quot;CONFigure:SCAn:LISt?&quot;
+in contrast to the old biodaq devices, this command will not set the number of channels</p>
+</li>
+<li>
+<p>&quot;CONFigure:SCAn:LISt?&quot;
 returns the complete order of channels as a list.
-You will see 8 entries.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:BAUD&quot;
-configures the Baudrate of AUX Device (default: 1 Mbps).</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:NAME?&quot;
+You will see 8 entries.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:BAUD&quot;
+configures the Baudrate of AUX Device (default: 1 Mbps).</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:NAME?&quot;
 returns the name of the AUX device, if present.
-if empty, no AUX device was detected.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:CONFIGanswer?&quot;
-returns the configured configanswer as hexadecimal string.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:PARam &lt;hexadecimalstring&gt;&quot;
-configures the configuration bytes of the AUX device.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:DISable&quot;
+if empty, no AUX device was detected.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:CONFIGanswer?&quot;
+returns the configured configanswer as hexadecimal string.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:PARam <hexadecimalstring>&quot;
+configures the configuration bytes of the AUX device.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:DISable&quot;
 disable AUX device
-purpose: reconfiguration of AUX device.</code></pre></li>
-<li><pre><code>&quot;CONFigure:AUX:ENAble&quot;
-enable AUX Device.</code></pre></li>
-<li><pre><code>&quot;CONFigure:TRIGger:MODE &lt;mode_string&gt;[,&lt;additional parameters&gt;]&quot;
+purpose: reconfiguration of AUX device.</p>
+</li>
+<li>
+<p>&quot;CONFigure:AUX:ENAble&quot;
+enable AUX Device.</p>
+</li>
+<li>
+<p>&quot;CONFigure:TRIGger:MODE &lt;mode_string&gt;[,<additional parameters>]&quot;
 configures Trigger, valid mode_strings: &quot;pulse&quot;,&quot;level&quot;,&quot;schmitt&quot;
 no additional parameter is allowed for mode &quot;level&quot;.
 one optional parameter for mode = &quot;pulse&quot;: positive number of the pulselen, default: 10
-three additional parameter are required for mode = &quot;schmitt&quot;: &lt;chan&gt;,&lt;thresholdUp&gt;,&lt;thresholdDwn&gt;.
-mode &quot;schmitt&quot; monitors logical channel &lt;chan&gt; and sets the Triggeroutput automaticly
-it sets Triggeroutput to 1 if value(chan)&gt; &gt; &lt;ThreshouldUp&gt;
-and resets to 0 if &lt;value(chan)&gt; &lt; &lt;thessholdDwn&gt;
-if &lt;ThreshouldUp&gt; &lt; &lt;ThreshouldDwn&gt;:
-it sets Triggeroutput to 1 if value(chan)&gt; &lt; &lt;ThreshouldUp&gt;
-and resets to 0 if &lt;value(chan)&gt; &gt; &lt;thessholdDwn&gt;</code></pre></li>
-<li><pre><code>&quot;TRIGger:SET &lt;value&gt;&quot;
+three additional parameter are required for mode = &quot;schmitt&quot;: <chan>,<thresholdUp>,<thresholdDwn>.
+mode &quot;schmitt&quot; monitors logical channel <chan> and sets the Triggeroutput automaticly
+it sets Triggeroutput to 1 if value(chan)&gt; &gt; <ThreshouldUp>
+and resets to 0 if &lt;value(chan)&gt; &lt; <thessholdDwn>
+if <ThreshouldUp> &lt; <ThreshouldDwn>:
+it sets Triggeroutput to 1 if value(chan)&gt; &lt; <ThreshouldUp>
+and resets to 0 if &lt;value(chan)&gt; &gt; <thessholdDwn></p>
+</li>
+<li>
+<p>&quot;TRIGger:SET <value>&quot;
 sets the triggeroutput.
 in mode &quot;schmitt&quot;: this command will be ignored.
-in mode &quot;pulse&quot;: output is set to &lt;value&gt; and &lt;!value&gt; automaticly after n clocks of samplerate.
-in mode &quot;level&quot;: output is set to 0 if &lt;value&gt;==0, else set to 1.</code></pre></li>
-<li><pre><code>&quot;MEMory:RAW? &lt;membank&gt;,&lt;length&gt;&quot;
-the allowed value of mandatory parameter &lt;membank&gt; is 0 .. 20
-the optional parameter &lt;length&gt; set the desired length ( max 4096 )
+in mode &quot;pulse&quot;: output is set to <value> and &lt;!value&gt; automaticly after n clocks of samplerate.
+in mode &quot;level&quot;: output is set to 0 if <value>==0, else set to 1.</p>
+</li>
+<li>
+<p>&quot;MEMory:RAW? <membank>,<length>&quot;
+the allowed value of mandatory parameter <membank> is 0 .. 20
+the optional parameter <length> set the desired length ( max 4096 )
 if not used, you get the whole flash block with 4096 bytes
-returns content of selected memory bank as uint8 array.</code></pre></li>
-<li><pre><code>&quot;MEMory:RAW &lt;membank&gt;&quot;
-the allowed value of mandatory parameter &lt;membank&gt; is 0 .. 20
+returns content of selected memory bank as uint8 array.</p>
+</li>
+<li>
+<p>&quot;MEMory:RAW <membank>&quot;
+the allowed value of mandatory parameter <membank> is 0 .. 20
 prepares to write a binary block to selected memory bank.
 maximum length of the following binaryBlock is 4096 bytes
 this command erases the whole block of flash memory and writes
-the following SCPI binblock to the flash memory</code></pre></li>
-<li><pre><code>&quot;CONFigure:DEVice &lt;nAdc32&gt;,&lt;nAdc16&gt;,&lt;nIMU&gt;,&lt;nAux&gt;&quot;
+the following SCPI binblock to the flash memory</p>
+</li>
+<li>
+<p>&quot;CONFigure:DEVice <nAdc32>,<nAdc16>,<nIMU>,<nAux>&quot;
 nAux is optional and should only be used, if an aux device is present.
 configures the device with the current configuration values
-this command has a longer duration, you have to wait or ask *OPC?
+this command has a longer duration, you have to wait.
 You should wait at minimum 30 ms at samplerate = 1000
-or 300 ms at samplerate = 100.</code></pre></li>
-<li><pre><code>&quot;INITiate&quot;
+or 300 ms at samplerate = 100.</p>
+</li>
+<li>
+<p>&quot;INITiate&quot;
 start the streaming mode. response are continuously sent binary blocks.
-You can stop this only with the abort command.</code></pre></li>
-<li><pre><code>&quot;ABORt&quot;
-aborts the streaming mode</code></pre></li>
+You can stop this only with the abort command.</p>
+</li>
+<li>
+<p>&quot;ABORt&quot;
+aborts the streaming mode</p>
+</li>
 </ul>
+
 </body>
 </html>

@@ -31,7 +31,7 @@ extern "C"
 // DO not change the following two defines!!
 #define MAX_NUM_DEVICES  4
 #define MAX_NUM_CHANNELS 128 // that are channels per device
-
+#define MAX_NUM_SLAVES   4
     // init the driver, a high priority task will be started
     int DLLCALL multiDaqInit(int debugLevel);
     // TODO implement
