@@ -1,3 +1,26 @@
+# Copyright (c) 2022, Tantor GmbH
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer
+#    in the documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import ctypes
 
 # from ctypes import byref
@@ -9,7 +32,7 @@ import platform
 import time
 
 
-class multiDaq:
+class multiDaqLowLevel:
     # ------------------------------------------------------------------------
     def __init__(self, dllPathName=""):
 
@@ -19,16 +42,12 @@ class multiDaq:
             if my_os == "Linux":
                 self.mydll = ctypes.CDLL("/usr/local/lib/libbiovisionMultiDaq.so")
             else:
-                self.mydll = ctypes.CDLL(
-                    "c:\\bin\\biovisionMultiDaq.dll"
-                )
+                self.mydll = ctypes.CDLL("c:\\bin\\biovisionMultiDaq.dll")
         else:
             if my_os == "Linux":
                 self.mydll = ctypes.CDLL(dllPathName + "/libbiovisionMultiDaq.so")
             else:
-                self.mydll = ctypes.CDLL(
-                    dllPathName + "/biovisionMultiDaq.dll"
-                )
+                self.mydll = ctypes.CDLL(dllPathName + "/biovisionMultiDaq.dll")
         self.masterID = -1
         self.mydll.multiDaqInit.argtypes = (ctypes.c_int,)
         self.mydll.multiDaqInit.restype = ctypes.c_int
@@ -37,6 +56,10 @@ class multiDaq:
         self.mydll.multiDaqOpen.restype = ctypes.c_int
         self.mydll.multiDaqClose.argtypes = (ctypes.c_int,)
         self.mydll.multiDaqClose.restype = ctypes.c_int
+
+        self.mydll.multiDaqSetCallbackData.argtypes = (ctypes.c_int, ctypes.c_void_p)
+        self.mydll.multiDaqSetCallbackData.restype = ctypes.c_int
+
         self.mydll.multiDaqGetSampleSize.argtypes = (ctypes.c_int,)
         self.mydll.multiDaqGetSampleSize.restype = ctypes.c_int
         self.mydll.multiDaqSendCmd.argtypes = (
@@ -63,7 +86,8 @@ class multiDaq:
         self.mydll.multiDaqGetAdcOversampling.restype = ctypes.c_int
         self.mydll.multiDaqGetAdcOversampling.argtypes = (ctypes.c_int,)
 
-        # int DLLCALL multiDaqGetStreamingData(int dev, char *data, int minaligned, int maxSize);
+        # int DLLCALL multiDaqGetStreamingData(int dev, char *data,
+        #                                      int minaligned, int maxSize);
         self.mydll.multiDaqGetStreamingData.restype = ctypes.c_int
         self.mydll.multiDaqGetStreamingData.argtypes = (
             ctypes.c_int,
@@ -80,7 +104,8 @@ class multiDaq:
         self.mydll.multiDaqEnableTx.restype = ctypes.c_int
         # int64_t DLLCALL multiDaqGetTicks(void);
         self.mydll.multiDaqGetTicks.restype = ctypes.c_int64
-        # int DLLCALL multiDaqGetTimeStampsFromSynchronizedGroup(int dev, int64_t *data);
+        # int DLLCALL multiDaqGetTimeStampsFromSynchronizedGroup(int dev,
+        #                                                        int64_t *data);
         self.mydll.multiDaqGetTimeStampsFromSynchronizedGroup.restype = ctypes.c_int
         self.mydll.multiDaqGetTimeStampsFromSynchronizedGroup.argtypes = (
             ctypes.c_int,
@@ -139,7 +164,7 @@ class multiDaq:
         ans = self.tMsgInit()
         if ans != 0:
             print("class multiDaq(): warning tMsgSystem not available")
-        ans = self.mydll.multiDaqInit(0)  # 1 means output debug messages via stdout
+        ans = self.mydll.multiDaqInit(0)  # 1 means output debug messages
         if ans != 0:
             try:
                 # raise ValueError('Represents a hidden bug, do not catch this')
@@ -150,11 +175,12 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def cleanup(self):
-        # print("daq_imu_udp: Running cleanup")
+        if self.isDebug:
+            print("multiDaqLowLevel(): Running cleanup")
         # self.mydll.sendCmd("abort\n*rst", True, True)
         ans = self.mydll.multiDaqDeInit()
         if ans != 0:
-            print("cleanup: deinit failed", ans)
+            print("multiDaqLowLevel(): fatal Error in cleanup, deinit failed", ans)
 
     # ------------------------------------------------------------------------
     def setDebugFlag(self, flag):
@@ -186,6 +212,11 @@ class multiDaq:
         if self.mydll.multiDaqClose(dev) == 0:
             return True
         return False
+
+    # ------------------------------------------------------------------------
+    def setDataCallback(self, dev, callbackfunction):
+        self.mydll.multiDaqSetCallbackData(dev, callbackfunction)
+        return True
 
     # ------------------------------------------------------------------------
     def checkSystemErrors(self):
@@ -261,18 +292,15 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def registerAsMaster(self):
-        print("####")
         self.masterID = self.mydll.tMsgRegisterAsMaster()
         print("masterID =", self.masterID)
 
     # ------------------------------------------------------------------------
     def unregisterAsMaster(self):
-        # TODO if cmd contains ? it is neccessary that it returns answerlen !=0, handle that
         self.mydll.tMsgUnregisterAsMaster(self.masterID)
 
     # ------------------------------------------------------------------------
     def sendMsgToSlave(self, dev, msg):
-        # TODO if cmd contains ? it is neccessary that it returns answerlen !=0, handle that
         msg = str(msg).encode()
         b = ctypes.c_int()
         if self.isDebug:
@@ -285,7 +313,6 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def getMsgFromSlave(self, dev):
-        # TODO if cmd contains ? it is neccessary that it returns answerlen !=0, handle that
         tmp = (ctypes.c_char * 256)()
         ans = self.mydll.tMsgGetSlaveMsg(
             ctypes.addressof(tmp),
@@ -301,7 +328,6 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def sendMsgToAllSlaves(self, msg):
-        # TODO if cmd contains ? it is neccessary that it returns answerlen !=0, handle that
         msg = str(msg).encode()
         if self.isDebug:
             print("sendMsg2Slave():", msg)
@@ -331,7 +357,8 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def sendCmd(self, dev, cmd, isStreaming=False):
-        # TODO if cmd contains ? it is neccessary that it returns answerlen !=0, handle that
+        # TODO if cmd contains ?
+        # it is neccessary that it returns answerlen !=0, handle that
         cmd = str(cmd).encode()
         a = ctypes.c_int()
         b = ctypes.c_int()
@@ -395,87 +422,130 @@ class multiDaq:
         return pups
 
 
-if __name__ == "__main__":
-    import os
-    
-    if False: # for debug purposes
-        if platform.system() == "Linux":
-            try:
-                mydriver = multiDaq("/usr/local/lib/libbiovisionMultiDaq.so")
-            except Exception:
-                print("Could not start driver")
-                exit(1)
-        else:
-            try:
-                mydriver = multiDaq(
-                    "c:\\projects\\multiDaq\\build-windows\\multiDaq\\biovisionMultiDaq.dll"
-                )
-            except Exception:
-                print("Could not start driver")
-                exit(1)
-        print("DLL loaded successfully")
-    else:
-        pathname = os.getcwd()
-        mydriver = multiDaq(pathname)
-      
-    # uncomment next line, if you do not want to see what happens inside
-    # mydriver.setDebugFlag(True)
+class multiDaq:
+    # ------------------------------------------------------------------------
+    def __init__(self, devNum=0, dllPathName=""):
+        self.devID = devNum
+        self.LL = multiDaqLowLevel(dllPathName)
+        # self.LL.setDebugFlag(True)
+        self.rangesAdc32 = []
+        self.rangesAdc16 = []
+        self.rangesImu6 = []
+        self.cfgInfo = (0, 0, 0)
+        print("Init complete")
 
-    ans = mydriver.getVersion()
-    print("reported Driver Version:", ans)
-    # mydriver.sendMsgToAllSlaves("hallo")
+    # ------------------------------------------------------------------------
+    def cleanup(self):
+        print("Cleanup")
 
-    # uncomment next block for test of tMsg system, (driver and (linux only)) msgConsumerTest must run
-    """time.sleep(0.1)
-    print("register now")
-    mydriver.registerAsMaster()
-    print("registered")
+    # ------------------------------------------------------------------------
+    def listDevices(self):
+        return self.LL.listDevices()
 
-    ans = mydriver.getMsgResponseCmd(0, "name")
-    time.sleep(0.01)
-    ans = mydriver.getMsgResponseCmd(0, "camera start")
-    t0 = time.time()
-    for i in range(10000):
-        ans = mydriver.getMsgResponseCmd(0, "camera stop")
-    print("10000 rounds took:", time.time() - t0)
-    time.sleep(0.1)
-    mydriver.unregisterAsMaster()
-    exit(0)"""
-    devs = mydriver.listDevices()
-    if len(devs) == 0:
-        print("no device found, exit now")
-        exit(1)
-    if len(devs) > 1:
-        print("warning: more than one device found")
-        print(devs)
-        print("I will use the first")
-    mydevID = devs[0]
-    mydev = int(0)
-    # mydriver.test(mydev)
-    if not mydriver.open(mydev, mydevID):
-        print("Error Open device")
-        exit(1)
-    ans = mydriver.sendCmd(mydev, "*idn?")
-    print("response to identification command:", ans)
-    ans = mydriver.sendCmd(mydev, "syst:vers:svn?")
-    print("build Version of device Firmware:", ans)
-    mydriver.sendCmd(mydev, "conf:sca:rat 1000")
-    mydriver.sendCmd(mydev, "conf:sca:ove 1")
-    # mydriver.sendCmd(mydev, "conf:sca:lis 1,1,1")
+    # ------------------------------------------------------------------------
+    def open(self, idString, doTest=False):
+        ret = self.LL.open(self.devID, idString)
+        if not ret:
+            return False
+        if doTest:
+            print("IDN Response:", self.LL.sendCmd(self.devID, "*idn?"))
+            print("conf:sca:num? tells:", self.LL.sendCmd(self.devID, "conf:sca:num?"))
+        return True
 
-    ans = mydriver.sendCmd(mydev, "conf:dev 0,3,0")
-    if len(ans) > 0:
-        print("Configuration of device failed: ", ans)
-        mydriver.close(mydev)
-        exit(1)
-    time.sleep(0.1)
-    ans = mydriver.sendCmd(mydev, "init", True)
-    time.sleep(1)
-    erg = mydriver.getStreamingData(mydev)
-    print("------------ results follows:")
-    print(erg)
-    ans = mydriver.sendCmd(mydev, "abort", True)
-    if not mydriver.close(mydev):
-        print("Error Close device")
-        exit(1)
-    exit(0)
+    # ------------------------------------------------------------------------
+    def close(self):
+        return self.LL.close(self.devID)
+
+    # ------------------------------------------------------------------------
+    def addAdc16(self, range):
+        if range != 6:
+            return False
+        if len(self.rangesAdc16) >= 7:
+            return False
+        self.rangesAdc16.append(range)
+        return True
+
+    # ------------------------------------------------------------------------
+    def addImu6(self, rangeAcc, rangeGyro):
+        ans = self.LL.sendCmd(self.devID, "conf:sca:num?")
+        dings = ans.split(",")
+        cc = []
+        for xx in dings:
+            cc.append(int(xx))
+        if len(cc) < 3:
+            return False
+        if self.cfgInfo[2] + 1 > cc[2]:
+            return False
+        self.rangesImu6.append((rangeAcc, rangeGyro))
+        return True
+
+    # ------------------------------------------------------------------------
+    def clearConfig(self):
+        self.rangesAdc16 = []
+        self.rangesImu6 = []
+        self.cfgInfo = (0, 0, 0)
+
+    # ------------------------------------------------------------------------
+    def setSampleRate(self, sr):
+        if len(self.LL.sendCmd(self.devID, "conf:sca:rat " + str(sr))):
+            return False
+        return True
+
+    # ------------------------------------------------------------------------
+    def configure(self):
+        nImu6 = len(self.rangesImu6)
+        nAdc16 = len(self.rangesAdc16)
+        self.scale = (1 / 32768) * numpy.ones((1, nImu6 * 6 + nAdc16))
+        cnt = 0
+        for i in range(nAdc16):
+            self.scale[0, cnt] *= self.rangesAdc16[i]
+            cnt += 1
+        for i in range(nImu6):
+            x = self.rangesImu6[i]
+            self.scale[0, cnt] *= x[0]
+            self.scale[0, cnt + 1] *= x[0]
+            self.scale[0, cnt + 2] *= x[0]
+            self.scale[0, cnt + 3] *= x[1]
+            self.scale[0, cnt + 4] *= x[1]
+            self.scale[0, cnt + 5] *= x[1]
+            cnt += 6
+        cmd = "conf:dev 0,%d,%d" % (nAdc16, nImu6)
+        if len(self.LL.sendCmd(self.devID, cmd)):
+            print("Config failed")
+            return False
+        self.cfgInfo = (0, nAdc16, nImu6)
+        time.sleep(0.3)
+        return True
+
+    # ------------------------------------------------------------------------
+    def startSampling(self):
+        self.LL.sendCmd(self.devID, "init", True)
+
+    # ------------------------------------------------------------------------
+    def stopSampling(self):
+        self.LL.sendCmd(self.devID, "abort", True)
+        return True
+
+    # ------------------------------------------------------------------------
+    def enableTx(self):
+        self.LL.enableTx()
+        return True
+
+    # ------------------------------------------------------------------------
+    def disableTx(self):
+        self.LL.disableTx()
+        return True
+
+    # ------------------------------------------------------------------------
+    def getStreamingData(self):
+        A = self.LL.getStreamingData(self.devID)
+        # TODO scale
+        for i in range(self.scale.size):
+            A[:, i] *= self.scale[0, i]
+        return A
+
+    # ------------------------------------------------------------------------
+    def getVersionInfo(self):
+        return self.LL.getVersion()
+
+
