@@ -50,6 +50,12 @@ extern "C"
     int DLLCALL multiDaqOpen(int dev, char *idString);
     int DLLCALL multiDaqClose(int dev);
 
+    // set the callbackfunction for data
+    // internal queues are not used, if pfunc is != NULL
+    // complete data exchange must be handled via callback function
+    // user has to manage all
+    int DLLCALL multiDaqSetCallbackData(int dev, void (*pfunc)(char *data, int len));
+
     // send a SCPI command, response is a string or a binary block, indicated by the value of isBinaryAnswer
     // in case binaryblock *bytesReceived hold the block size
     // otherwise you get a pointer to a null terminated string
@@ -110,11 +116,14 @@ extern "C"
     int DLLCALL  get();
     void DLLCALL set(int);
 
-    int DLLCALL tMsgInit(void);
+    int DLLCALL tMsgInit();
     int DLLCALL tMsgRegisterAsMaster(void);
     int DLLCALL tMsgRegisterAsSlave(void);
     int DLLCALL tMsgUnregisterAsMaster(int);
     int DLLCALL tMsgUnregisterAsSlave(int);
+    int DLLCALL tMsgSetSlaveCallback(void (*pfunc)(char *data), int address);
+    int DLLCALL tMsgSetMasterCallback(void (*pfunc)(char *data));
+
     int DLLCALL tMsgSendMsgToSlave(char *, int address);
     int DLLCALL tMsgSendMsgToAllSlaves(char *);
     int DLLCALL tMsgSendMsgToMaster(char *, int address);

@@ -4,10 +4,16 @@
 
 * info.c
            
-      read out the identification strings of all connected.biovision devices
+      read out the identification strings of all connected.biovision devices.
 * demo1.c
       
-      sample 2 channels for 1 second on the first listed device
+      sample 2 channels for 1 second on the first listed device.
+* demoCallback.c
+      
+      demonstration how Callback function for data works.
+      samples for 3 seconds and stop then.
+
+
 
 ---
 
