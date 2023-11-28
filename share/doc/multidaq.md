@@ -4,37 +4,34 @@
 
 ## C Interface
 
-we provide a h File, the dll itself and a library for linking. The dll
-is compiled with the Mingw64 Compiler Suite. if You use MSVC or other
-compilers, the linking acrobatic is up to You.
+We provide a h File, the dll itself and a library for linking. The dll
+is compiled with the Mingw64 Compiler Suite. If you use MSVC or other
+compilers, the linking acrobatic is up to you.
 
 The Interface is a pure C Interface, so no name mangling problems are
 expected.
 
 **Prerequisites**
 
-Win 10, 64 bit Version
-
-64 bit C or C++ Compiler
+* Win 10, 64 bit Version
+* 64 bit C or C++ Compiler
 
 ------------------------------------------------------------------------
 
-## python Interface
+## Python Interface
 
 in preparation
 
 ------------------------------------------------------------------------
 
-## matlab/octave Interface
+## Matlab/Octave Interface
 
-You have acces to the multiDaq devices via a single mex file. The
+You have access to the multiDaq devices via a single mex file. The
 mexfile accesses our biovisionMultiDaq.dll, so this dll must be in your
 path. No further driver must be installed.
 
 The driver will be started by the init command and stopped by the deinit
-command. The driver acts as a highly priorized task and will live, until
-you leave matlab or call the deinit function. After the call of the init
-command functions to access the device can be called.
+command. The driver acts as a highly prioritized task and will live, until you leave matlab or call the deinit function. After the call of the init command functions to access the device can be called.
 
 The command set of the device is SCPI based. Detailed information is
 found in chapter [SCPI commands](#scpi-commands)
@@ -111,7 +108,7 @@ both n and N are decimal numbers
 ### **format of a SCPI command**
 
 All SCPI commands without question mark responses only, if an error
-occurrs.
+occurs.
 
 format: \[:\]token1:token2:token \[param1\] , \[param2\] ....
 
@@ -145,13 +142,13 @@ example: conf:trig:mode "pulse",15
         returns list of possible ranges of the Gyroscope.
 
 -   "CONFigure:SCAn:RATe?"
-        returns configured samplerate.
+        returns configured sample rate.
 
 -   "CONFigure:AUX:BAUD?"
-        returns configured Baudrate of the aux device.
+        returns configured baud rate of the aux device.
 
 -   "CONFigure:SCAn:RATe <rate>"
-        configures Samplerate, valid range is 100 ... 1000.
+        configures sample rate, valid range is 100 ... 1000.
 
 -   "CONFigure:SCAn:OVErsampling"
         configures the Oversampling Rate of ADC16.
@@ -168,7 +165,7 @@ example: conf:trig:mode "pulse",15
         You will see 8 entries.
 
 -   "CONFigure:AUX:BAUD"
-        configures the Baudrate of AUX Device (default: 1 Mbps).
+        configures the baud rate of AUX Device (default: 1 Mbps).
 
 -   "CONFigure:AUX:NAME?"
         returns the name of the AUX device, if present.
@@ -192,7 +189,7 @@ example: conf:trig:mode "pulse",15
         no additional parameter is allowed for mode "level".
         one optional parameter for mode = "pulse": positive number of the pulselen, default: 10
         three additional parameter are required for mode = "schmitt": <chan>,<thresholdUp>,<thresholdDwn>.
-        mode "schmitt" monitors logical channel <chan> and sets the Triggeroutput automaticly
+        mode "schmitt" monitors logical channel <chan> and sets the Triggeroutput automatically
         it sets Triggeroutput to 1 if value(chan)> > <ThreshouldUp>
         and resets to 0 if <value(chan)> < <thessholdDwn>
         if <ThreshouldUp> < <ThreshouldDwn>:
@@ -202,7 +199,7 @@ example: conf:trig:mode "pulse",15
 -   "TRIGger:SET <value>"
         sets the triggeroutput.
         in mode "schmitt": this command will be ignored.
-        in mode "pulse": output is set to <value> and <!value> automaticly after n clocks of samplerate.
+        in mode "pulse": output is set to <value> and <!value> automatically after n clocks of sample rate.
         in mode "level": output is set to 0 if <value>==0, else set to 1.
 
 -   "MEMory:RAW? <membank>,<length>"
@@ -222,8 +219,8 @@ example: conf:trig:mode "pulse",15
         nAux is optional and should only be used, if an aux device is present.
         configures the device with the current configuration values
         this command has a longer duration, you have to wait.
-        You should wait at minimum 30 ms at samplerate = 1000
-        or 300 ms at samplerate = 100.
+        You should wait at minimum 30 ms at sample rate = 1000
+        or 300 ms at sample rate = 100.
 
 -   "INITiate"
         start the streaming mode. response are continuously sent binary blocks.
