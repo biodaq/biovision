@@ -31,11 +31,11 @@ if len(listDev) == 0:
     print("no Device detected, exit now")
     exit(1)
 if len(listDev) < 2:
-    print("Error: we need 2 devices, exit now")
+    print(f"Error: 2 devices required, but only {len(listDev)} was detected. Exit now")
     exit(1)
 
-myDev.open(0, listDev[0])  # open the first detected als device 0
-myDev.open(1, listDev[1])  # open the second detected als device 1
+myDev.open(0, listDev[0])  # open the first detected as device 0
+myDev.open(1, listDev[1])  # open the second detected as device 1
 
 print("IDN response dev 1:", myDev.sendCmd(0, "*idn?"))
 print("IDN response dev 2:", myDev.sendCmd(1, "*idn?"))

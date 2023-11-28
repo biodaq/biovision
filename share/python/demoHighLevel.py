@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     dev.startSampling()
 
-    # ------------------------------------ aquisition loop ------------------------
+    # ------------------------------------ acquisition loop ------------------------
     gotFirstData = False
     for i in range(20):
         time.sleep(0.1)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     dev.stopSampling()
     dev.close()
 
-    # cfgInfo ist a tupel with content (nAdc32,nAdc16,nImu)
+    # cfgInfo ist a tuple with content (nAdc32,nAdc16,nImu)
     # or (nAdc32,nAdc16,nImu,nAux) {if Aux is employed}
     if dev.cfgInfo[0] > 0:
         print("may happen in future, till now it is handled as an Error")

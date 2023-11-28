@@ -43,11 +43,11 @@ with Microsoft Compiler:
 
 **Windows**
 
-You need biovisionMultiDaq.dll in Your path. It is in the 'bin' path. You may consider to copy the dll in a system path or set the %PATH% variable to Your preferred installation folder.
+You need biovisionMultiDaq.dll in your path. It is in the 'bin' path. You may consider to copy the dll in a system path or set the %PATH% variable to your preferred installation folder.
 
 **Linux**
 
 You can run the demos from every location.  
-If You not installed to /usr/local, You have to play with LD_LIBRARY_PATH.  
-Or if You do not want to play with the environment, add the rpath linker option in the call of gcc.  
+If you not installed to /usr/local, you have to play with LD_LIBRARY_PATH.  
+Or if you do not want to play with the environment, add the rpath linker option in the call of gcc.  
 i.e. '-Wl,-rpath=/path/where/you/installed' in that case.  

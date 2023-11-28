@@ -20,9 +20,9 @@ examples and binary were tested with R2021a only.
 * demo1.m:  (high level)  
 demo for the convenience class
 * getTdfData.m:  
-utily to read *.tdf files produced by multiDaq.exe.
+utility to read *.tdf files produced by multiDaq.exe.
 * viewTdf.m  
 example how to use getTdfData.m
 
-The low level functions are more powerful and flexibel. You can manage multiple devices and triggers.
+The low level functions are more powerful and flexible. You can manage multiple devices and triggers.
 
