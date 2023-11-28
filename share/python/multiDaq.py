@@ -35,7 +35,6 @@ import time
 class multiDaqLowLevel:
     # ------------------------------------------------------------------------
     def __init__(self, dllPathName=""):
-
         self.isDebug = False
         my_os = platform.system()
         if len(dllPathName) == 0:
@@ -547,5 +546,3 @@ class multiDaq:
     # ------------------------------------------------------------------------
     def getVersionInfo(self):
         return self.LL.getVersion()
-
-
