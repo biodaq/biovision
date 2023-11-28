@@ -34,7 +34,7 @@ copy all scripts, applications and the biovision dll to a folder of your choice 
 We assume the \*.so dynamic libraries to be located in /usr/local/lib.
 to ensure that, simply copy the needed files to that location.
 
-The script install.sh in the root folder will do the job for you. Run simply 'bash install.sh'. You will be asked for the administrator password.
+The script install.sh in the root folder will do the job for you. Run simply 'sudo ./install.sh'. You will be asked for the administrator password.
 
 If You want to use our tMsg system to communicate between applications the biovisionSharedMemDriver (in bin folder) must run. You may consider to start it in the autostart group. It enables communication between applications via linux shared Memory.
 
