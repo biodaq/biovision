@@ -1,7 +1,18 @@
 # matlab mex binary and examples
 
-we put matlab binary and example scripts into the same directory.
-to run the examples, you need to have biovisionMultiDaq.dll in your path.
+First compile biovision_multidaq.c to a mex file.
+
+for matlab a mex compiler (gcc) must be installed. octave has preinstalled
+compiler per default (OS dependend).
+translate.m will do the job for you.
+
+**Windows:**
+
+to run the examples, you need to have also biovisionMultiDaq.dll in your path.
+
+**Linux*
+
+biovision driver must be installed.
 
 ## prerequisites
 
