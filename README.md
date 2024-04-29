@@ -11,8 +11,7 @@ Folders:
 * lib: contain the import lib (Win only) and the .so libs (linux)
 * share: subfolders for Dokumentation and language specific binaries/examples
   * C: examples for the C low level interface
-  * matlab: 64 bit mexfile and examples (Windows only)
-  * octave: 64 bit mexfile and examples (Win / Linux)
+  * matlab: sourcefile for mex and examples (Windows only)
   * python: python low level interface and examples (OS independent)
 
 ## Runtime
