@@ -3,6 +3,17 @@ function demo1
     a = multidaq; % create object
     A = a.listdevices();
 
+    if length(A) != 1
+        printf("no device or multiple devices present");
+        return;
+    end
+
+    hasAdc32 = 0;
+
+    if strncmp(A{1}, "bio", 3) == 1
+        hasAdc32 = 1;
+    end
+
     %----------- open the first detected device
     ret = a.open(A{1});
 
@@ -12,9 +23,15 @@ function demo1
     % non feasible parameter will force errors
     ret = a.clearConfig();
     ret = a.setSampleRate(1000);
-    ret = a.addAdc16(6); % one line per channel
-    ret = a.addAdc16(6);
-    ret = a.addImu6(6, 250); % uncomment to add the first Imu
+
+    if hasAdc32
+        a.addAdc32(1);
+        a.addAdc32(1);
+    else
+        ret = a.addAdc16(6); % one line per channel
+        ret = a.addAdc16(6);
+        %ret = a.addImu6(6, 250); % uncomment to add the first Imu
+    end
 
     if length(ret)
         fprintf('an error occurred\n');
@@ -28,7 +45,7 @@ function demo1
     ret = a.startSampling();
     result = a.getStreamData();
 
-    for i = 1:10
+    for i = 1:20
         pause(.1); % not neccessary, but you will mostly get zero length
         tmp = a.getStreamData();
         result = vertcat(result, tmp);
@@ -50,7 +67,10 @@ function demo1
     % then next 3 cols are acc data of imu1
     % then next 3 cols are Gyro data of imu1
     % next 3 cols are acc data of imu2 and so on
+
     if a.nImu6 == 0
+        printf("Plot now \n")
+        disp(result)
         plot(result);
         title('adc Measurement')
         ylabel ('[V]');

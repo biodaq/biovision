@@ -12,20 +12,33 @@ end
 for i = 1:tmp(1)
 
     if strfind(A{i}, 'bio')
-        fprintf('found bioDaq device\n');
+        fprintf('\nfound bioDaq device\n');
         [ans, err] = biovision_multidaq('open', '1', A{i});
         [ans, err] = biovision_multidaq('cmd', '1', '*idn?');
-        fprintf('device answered to *idn?: %s\n', ans);
-        [ans, err] = biovision_multidaq('close', '1');
-    end
 
-    if strfind(A{i}, 'multi')
-        fprintf('found multiDaq device\n');
+        fprintf('device answered to *idn?: %s\n', ans);
+        [ans, err] = biovision_multidaq('cmd', '1', 'syst:vers:svn?');
+        fprintf('svn version of device firmware: %s\n', ans);
+        [ans, err] = biovision_multidaq('close', '1');
+    else if strfind(A{i}, 'multi')
+        fprintf('\nfound multiDaq device\n');
         [ans, err] = biovision_multidaq('open', '2', A{i});
         [ans, err] = biovision_multidaq('cmd', '2', '*idn?');
         fprintf('device answered to *idn?: %s\n', ans);
+        [ans, err] = biovision_multidaq('cmd', '1', 'syst:vers:svn?');
+        fprintf('svn version of device firmware: %s\n', ans);
+        [ans, err] = biovision_multidaq('close', '2');
+    else
+        fprintf('\nfound unknown device\n');
+        [ans, err] = biovision_multidaq('open', '2', A{i});
+        [ans, err] = biovision_multidaq('cmd', '2', '*idn?');
+        fprintf('device answered to *idn?: %s\n', ans);
+        [ans, err] = biovision_multidaq('cmd', '1', 'syst:vers:svn?');
+        fprintf('svn version of device firmware: %s\n', ans);
         [ans, err] = biovision_multidaq('close', '2');
     end
+
+end
 
 end
 

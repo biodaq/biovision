@@ -31,7 +31,7 @@
 #include <ctype.h>
 #include <stdint.h>
 
-#include "include/biovisionMultiDaq.h"
+#include "biovisionMultiDaq.h"
 #include <string.h>
 
 #define MAX_POSSIBLE_PARAMS 10
@@ -70,10 +70,8 @@ static void moduleExit(void) // TODO aufräumen
     if (isInitialized)
         multiDaqDeInit();
     isInitialized = 0;
-    // multiDaqDeInit();
     if (debugLevel)
         mexPrintf("matlab: moduleExit()\n");
-    // Sleep(50);
 }
 /*--------------------------------------------------------------------------------*\
 \*--------------------------------------------------------------------------------*/
@@ -90,7 +88,6 @@ static int checkSCPI(char **arguments, const char *cmd, const char *needle)
         p++;
     for (i = 0; i < strlen(needle); i++)
     {
-        // printf("examine %d: %c\n", i, *p);
         if (isupper(*ps))
         {
             if (tolower(*p) != tolower(*ps))
@@ -174,8 +171,9 @@ static int analyseConfigCommand(const char *cmd, unsigned *size, unsigned format
         {
             if (tmp)
             {
-                *size = 1;
-                return 1;
+                *size = tmp;
+                if (debugLevel) mexPrintf("size format=2 set to %d\n", *size);
+                return 0;
             }
         }
         if (k == 1)
@@ -293,9 +291,11 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         portNum = i - 1;
         if (isOpen[portNum])
         {
-            nFill = multiDaqGetStreamingData(portNum, (char *)inputBuffer, sampSize[portNum] * sampFormat[portNum], sizeof(inputBuffer)); // TODO
+            int nIndex = 0;
+            if (sampFormat[portNum] == 4) nIndex = 1;
+            nFill = multiDaqGetStreamingData(portNum, (char *)inputBuffer, (sampSize[portNum] + nIndex) * sampFormat[portNum], sizeof(inputBuffer)); // TODO
             if (debugLevel)
-                mexPrintf("get received %d bytes on port%d\n", nFill, portNum);
+                mexPrintf("get received %d bytes on port%d format=%d sampsize=%d\n", nFill, portNum, sampFormat[portNum], sampSize[portNum]);
             int32_t *p32Data = (int32_t *)inputBuffer; // TODO multiDaq 4 byte vs 2 byte
             int16_t *p16Data = (int16_t *)inputBuffer; // TODO multiDaq 4 byte vs 2 byte
             //     nFill           = 0;
@@ -369,7 +369,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
             if (strncmp(params[1], "debug", 256) == 0)
             {
                 debugLevel = 1;
-                // mexPrintf("##################");
+                // if (debugLevel) mexPrintf("##################");
             }
         }
         if (isInitialized)
@@ -429,8 +429,10 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         else if (strncmp(p, "bio", 3) == 0)
         {
             sampFormat[portNum] = 4;
+            if (debugLevel)
+                mexPrintf("####: sampformat = 4\n", params[2], p);
         }
-        else if (strncmp(p, "logger", 3) == 0)
+        else if (strncmp(p, "logger", 6) == 0)
         {
             sampFormat[portNum] = 4;
         }
@@ -492,16 +494,22 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
             waitOnAnswer = 0;
         }
         // special operation for the device configure command to get the samplesize and sampleformat
-        if ((strncmp(params[2], "conf:dev", 8) == 0) || (strncmp(params[2], "configure:dev", 12) == 0))
+        char *args = NULL;
+        if (checkSCPI(&args, params[2], "CONFigure:DEVice"))
+        // if ((strncmp(params[2], "conf:dev", 8) == 0) || (strncmp(params[2], "configure:dev", 13) == 0))
         {
             int ovs = multiDaqGetAdcOversampling(portNum);
-            if (sampFormat[portNum] == 2 && analyseConfigCommand(params[2], &sampSize[portNum], sampFormat[portNum], ovs))
+            // TODO argument list is in args now
+            if (analyseConfigCommand(params[2], &sampSize[portNum], sampFormat[portNum], ovs))
             {
                 outErrMessage = "configuration Parameters are invalid";
             }
+            // sampSize[portNum] = 5;
+            // mexPrintf("Ssampsize =%d\n", sampSize[portNum]);
         }
         // special operation for the biodaq device lis command
-        if (strncmp(params[2], "conf:sca:lis", 12) == 0)
+        if (checkSCPI(&args, params[2], "CONFigure:SCAn:LISt"))
+        // if (strncmp(params[2], "conf:sca:lis", 12) == 0)
         {
             // simply count the commas
             char *p     = params[2];
@@ -523,6 +531,15 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
             answerString = multiDaqSendCmd(portNum, params[2], &len, &isBinaryAnswer);
             // printf("sampleSizesfromdriver = %d\n", multiDaqGetSampleSize(portNum));
             // printf("sampleSizesorig = %d\n", sampSize[portNum]);
+            // remove trailing \n\r
+            char *p = answerString;
+            while (*p) p++;
+            while (p != answerString)
+            {
+                p--;
+                if (*p == 10 || *p == 13) *p = 0;
+                else break;
+            }
         }
         else
         {
@@ -547,7 +564,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
     //------------------------------------------------------------------------
     if (strncmp(params[0], "binblock", 256) == 0)
     {
-        mexPrintf("##############binblock %d\n", paramLen[2]);
+        if (debugLevel) mexPrintf("##############binblock %d\n", paramLen[2]);
         if (num_params != 3)
             mexErrMsgIdAndTxt(myMatlabId, "Command 'binblock' the port number and a char array");
         i = atoi(params[1]);
@@ -562,7 +579,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         }
         else
         {
-            mexPrintf("######################## %d\n", paramLen[2]);
+            if (debugLevel) mexPrintf("######################## %d\n", paramLen[2]);
             // now prhs[2] should be the data array with the values
             if (multiDaqSendSCPIbinBlock(portNum, params[2], paramLen[2]))
             {

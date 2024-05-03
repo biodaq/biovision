@@ -2,25 +2,27 @@
    biovisionMultiDaq.h
    h file for the biovisionMultiDaq.dll
    You will need a 64 bit compiler
-   We recommend to use the mingw64 compiler suite on Windows, andd gcc 64 bit on Linux
+   We recommend to use the mingw64 compiler suite on Windows, and gcc 64 bit on Linux
    but nevertheless it works with other C or C++ compilers
    the interface is pure C, no name mangling is used
 */
 
 /* You should define ADD_EXPORTS *only* when building the DLL. */
 #ifdef ADD_EXPORTS
-#define DLLAPI __declspec(dllexport)
+#ifdef _WIN32
+#define DLLAPI  __declspec(dllimport)
+#define DLLCALL __declspec(dllexport)
 #else
-#define DLLAPI __declspec(dllimport)
+#define DLLAPI
+#define DLLCALL
 #endif
-
-/* Define calling convention in one place, for convenience. */
+#else
 #ifdef _WIN32
 #define DLLCALL __cdecl
 #else
 #define DLLCALL
 #endif
-
+#endif
 /* Make sure functions are exported with C linkage under C++ compilers. */
 #ifdef __cplusplus
 extern "C"
@@ -28,15 +30,13 @@ extern "C"
 #endif
 #include <stdint.h>
 
-// DO not change the following two defines!!
+// DO not change the following three defines!!
 #define MAX_NUM_DEVICES  4
-#define MAX_NUM_CHANNELS 128 // that are channels per device
+#define MAX_NUM_CHANNELS 128 // that are 16 bit channels per device
 #define MAX_NUM_SLAVES   4
+
     // init the driver, a high priority task will be started
     int DLLCALL multiDaqInit(int debugLevel);
-    // TODO implement
-    // int DLLCALL   multiDaqRegisterCallback(int dev,funcptr *func,int nBytes);
-    // int DLLCALL   multiDaqUnRegisterCallback(int dev);
 
     // deinit the driver, the high priority task will be stopped
     int DLLCALL multiDaqDeInit();
@@ -66,9 +66,10 @@ extern "C"
     int DLLCALL multiDaqSendCmdWhileStreaming(int dev, char *cmd); // fire and forget
     int DLLCALL multiDaqSendSCPIbinBlock(int dev, char *data, int len);
 
-    // convenience function to get the oversampling factor od ADC (only multidaq can deal with n!=1)
+    // convenience function to get the oversampling factor of the ADC (only multidaq can deal with n!=1)
     int DLLCALL multiDaqGetAdcOversampling(int dev); // 1 or 2, values are set in the 'conf:sca:ove' cmd
-    int DLLCALL multiDaqGetSampleSize(int dev);      // in bytes, values are set in 'conf:dev' command
+    // returns samplesize, is valid after successful "conf:dev" command
+    int DLLCALL multiDaqGetSampleSize(int dev); // in bytes, values are set in 'conf:dev' command
 
     // returns number of bytes, they will be a multiple of minaligned
     // returns -1 for fatal error and -2 for timeouted, (-2 is quite normal after the 'abort' command)
@@ -110,12 +111,7 @@ extern "C"
     // little helper to get the version string of the dll
     const char *DLLCALL multiDaqGetVersion(void);
 
-    /* Exported variables. */
-    // extern DLLAPI int foo;
-    // extern DLLAPI int bar;
-    int DLLCALL  get();
-    void DLLCALL set(int);
-
+    /*---------------------- tMsg System related functions ---------------*/
     int DLLCALL tMsgInit();
     int DLLCALL tMsgRegisterAsMaster(void);
     int DLLCALL tMsgRegisterAsSlave(void);
@@ -131,6 +127,12 @@ extern "C"
     int DLLCALL tMsgGetSlaveMsg(char *, int address);
     int DLLCALL tMsgGetTimeStamps(int64_t *, int address);
     int DLLCALL tMsgClearAllSlaveMessages();
+
+    /*---------------------- gaphics ---------------*/
+    int DLLCALL sdl2Window(int posx, int posy, int width, int height);
+    int DLLCALL sdl2WindowConfigure(int devID, int samplesInWindow);
+    int DLLCALL sdl2KillWindow(void);
+
 #ifdef __cplusplus
 } // __cplusplus defined.
 #endif
