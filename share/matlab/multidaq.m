@@ -11,6 +11,7 @@ classdef multidaq < handle
 
     %% Private properties
     properties (Access = private)
+        isInitialized = false;
         isopen = false;
         isStreaming = 0;
         isMatlab = true;
@@ -19,37 +20,61 @@ classdef multidaq < handle
         scaleImu = [];
         scaleAdc = [];
         scale = [];
+        ID = '1';
     end
 
     %% Public methods
     methods (Access = public)
         %-----------------------------------------------------------------------
         function obj = multidaq(varargin)
-
-            for i = 1:2:nargin
-
-                if strcmp(varargin{i}, 'interface'), obj.interface = varargin{i + 1};
-                else error('Invalid argument');
-                end
-
-            end
-
             octaveVersion = exist ('OCTAVE_VERSION', 'builtin');
+            obj.isMatlab = true;
 
             if octaveVersion ~= 0
                 %print('OCTAVE_VERSION = %d\n',octaveVersion);
                 obj.isMatlab = false;
             end
 
+            for i = 1:2:nargin
+
+                if strcmp(varargin{i}, 'interface')
+                    obj.interface = varargin{i + 1};
+                elseif strcmp(varargin{i}, 'ID')
+                    %                    fprintf("Here ID=%s\n", varargin{i + 1});
+                    if obj.isMatlab
+                        obj.ID = convertStringsToChars(varargin{i + 1});
+                    else
+                        obj.ID = sprintf("%s", varargin{i + 1});
+                    end
+
+                else
+                    error('Invalid argument');
+                end
+
+            end
+
+            if ~(obj.ID == '1' || obj.ID == '2' || obj.ID == '3' || obj.ID == '4')
+                error('ID must be 1 ... 4');
+            end
+
             %biovision_multidaq('init', 'debug');
             biovision_multidaq('init');
+            obj.isInitialized = true;
             %fprintf('constructor multidaq finished\n');
         end
 
         %-----------------------------------------------------------------------
         function delete(obj)
             %obj.dev.delete();
-            biovision_multidaq('deinit');
+            if obj.isInitialized == true
+
+                if obj.isopen == true
+                    obj.close();
+                end
+
+                biovision_multidaq('deinit');
+            end
+
             %fprintf('deconstructor multidaq from delete finished\n');
         end
 
@@ -63,17 +88,21 @@ classdef multidaq < handle
         function ret = open(obj, devicename)
             %fprintf('multidaq.open()\n');
 
-            ret = biovision_multidaq('open', '1', char(devicename));
+            [ret, errmsg] = biovision_multidaq('open', obj.ID, char(devicename));
             %ffff
+            if length(errmsg) > 0
+                %fprintf("%s\n", errmsg);
+                error(errmsg);
+            end
 
             if length(ret) == 0
                 obj.isopen = true;
             end
 
-            obj.idnAnswer = biovision_multidaq('cmd', '1', "*idn?");
+            obj.idnAnswer = biovision_multidaq('cmd', obj.ID, '*idn?');
 
-            ret = biovision_multidaq('cmd', '1', "conf:sca:num?");
-            %printf("conf:sca:num=%s\n", ret);
+            ret = biovision_multidaq('cmd', obj.ID, 'conf:sca:num?');
+            %fprintf("conf:sca:num=%s\n", ret);
 
             if strncmp(ret, "0,", 2) == 1 % startswith "0,"
                 obj.hasAdc32 = false;
@@ -93,7 +122,7 @@ classdef multidaq < handle
         function ret = setSampleRate(obj, rate)
             %fprintf('setSampleRate()\n');
             cmd = sprintf ('conf:sca:rat %d\n', rate);
-            ret = biovision_multidaq('cmd', '1', cmd);
+            ret = biovision_multidaq('cmd', obj.ID, cmd);
         end
 
         %-----------------------------------------------------------------------
@@ -112,7 +141,7 @@ classdef multidaq < handle
         function ret = addImu6(obj, rangeAcc, rangeGyro)
             %fprintf('addImu6()\n');
             cmd = sprintf ('conf:imu:para %d,%d,%d', obj.nImu6, rangeAcc, rangeGyro);
-            ret = biovision_multidaq('cmd', '1', cmd);
+            ret = biovision_multidaq('cmd', obj.ID, cmd);
             obj.nImu6 = obj.nImu6 + 1;
             obj.scaleImu = [obj.scaleImu rangeAcc rangeGyro];
         end
@@ -129,7 +158,7 @@ classdef multidaq < handle
 
             %TODO implement new command in device firmware
             %cmd = sprintf ('conf:sca:range %d,%d\n',obj.nAdc16,range);
-            %ret = biovision_multidaq('cmd','1',cmd)
+            %ret = biovision_multidaq('cmd',obj.ID,cmd)
             obj.nAdc16 = obj.nAdc16 + 1;
             obj.scaleAdc = [obj.scaleAdc range];
         end
@@ -138,7 +167,7 @@ classdef multidaq < handle
         function ret = addAdc32(obj, A0)
             ret = '';
 
-            if A0 != 1
+            if A0 ~= 1
                 ret = 'Amplification must be 1'
                 return
             end
@@ -147,16 +176,21 @@ classdef multidaq < handle
         end
 
         %-----------------------------------------------------------------------
+        function ret = LowLevelCommand(obj, cmd)
+            ret = biovision_multidaq('cmd', obj.ID, cmd);
+        end
+
+        %-----------------------------------------------------------------------
         function ret = configure(obj)
             %fprintf('configure()\n');
             cmd = sprintf ('conf:dev %d,%d,%d', obj.nAdc32, obj.nAdc16, obj.nImu6);
-            ret = biovision_multidaq('cmd', '1', cmd);
+            ret = biovision_multidaq('cmd', obj.ID, cmd);
             obj.scale = [];
             nch = 0;
-            printf("conf:: %s\n", cmd)
+            fprintf("conf:: %s\n", cmd)
 
             if length(ret)
-                printf("error: cmd = %s answer = %s\n", cmd, ret);
+                fprintf("error: cmd = %s answer = %s\n", cmd, ret);
                 return;
             end
 
@@ -192,27 +226,33 @@ classdef multidaq < handle
         %-----------------------------------------------------------------------
         function ret = startSampling(obj)
             %fprintf('startSampling()\n');
-            ret = biovision_multidaq('cmd', '1', 'init', 'stream');
+            ret = biovision_multidaq('cmd', obj.ID, 'init', 'stream');
         end
 
         %-----------------------------------------------------------------------
         function ret = stopSampling(obj)
             %fprintf('stopSampling()\n');
-            ret = biovision_multidaq('cmd', '1', 'abort', 'stream');
+            ret = biovision_multidaq('cmd', obj.ID, 'abort', 'stream');
         end
 
         %-----------------------------------------------------------------------
         function dret = getStreamData(obj)
-            dret = biovision_multidaq('get', '1');
-            % scale them properly
+            dret = biovision_multidaq('get', obj.ID);
+
             if numel(dret) == 0
+
+                if obj.hasAdc32 == true
+                    dret = dret(:, 2:end);
+                end
+
                 return;
             end
 
             if obj.hasAdc32 == true
+                dret = dret(:, 2:end);
 
                 for i = 1:obj.nTotalChan
-                    dret(:, i + 1) = obj.scale(i) * dret(:, i + 1);
+                    dret(:, i) = obj.scale(i) * dret(:, i);
                 end
 
             else
@@ -227,7 +267,7 @@ classdef multidaq < handle
 
         %-----------------------------------------------------------------------
         function close(obj)
-            biovision_multidaq('close', '1');
+            biovision_multidaq('close', obj.ID);
             obj.isopen = false;
         end
 

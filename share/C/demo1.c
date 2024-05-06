@@ -55,10 +55,13 @@ int main(int argc, char **argv)
     int            Cnt = 0;
     char          *p8;
     const int16_t *p16 = (int16_t *)bigbuf;
+    const int32_t *p32 = (int32_t *)bigbuf;
     int            bytesReceived;
     int            isBinaryAnswer;
-    const char    *tmp = multiDaqListDevices(); // call without initializing the driver is possible
-    strncpy(result, tmp, sizeof(result) - 1);   // keep a copy here for strtok
+    int            isBio = 0;
+
+    const char *tmp = multiDaqListDevices();  // call without initializing the driver is possible
+    strncpy(result, tmp, sizeof(result) - 1); // keep a copy here for strtok
 
     printf("Result listdevices(%d):\n%s\n\n", (int)strlen(result), result);
     if (strlen(result) == 0)
@@ -72,12 +75,12 @@ int main(int argc, char **argv)
     /* walk through other tokens */
     while (token != NULL)
     {
+        isBio = 1;
         if (strncmp(token, "multi", 5) == 0) // look for the first valid multi device
-        {
-            printf("found device %s\n", token);
-            comPort = token;
-            break;
-        }
+            isBio = 0;
+        printf("found device %s\n", token);
+        comPort = token;
+        break;
         token = strtok(NULL, "\n");
     }
     if (strlen(comPort) == 0)
@@ -120,10 +123,19 @@ int main(int argc, char **argv)
     }
 #endif
 
-    int  nChan      = 2; // 1 .. 8 possible
-    int  samplesize = nChan * 2;
+    int  nChan = 2; // 1 .. 8 possible
+    int  samplesize;
     char buf[100];
-    sprintf(buf, "conf:dev 0,%d,0", nChan);
+    if (isBio)
+    {
+        samplesize = (nChan + 1) * 4;
+        sprintf(buf, "conf:dev %d,0,0", nChan);
+    }
+    else
+    {
+        samplesize = nChan * 2;
+        sprintf(buf, "conf:dev 0,%d,0", nChan);
+    }
     if (multiDaqSendCmd(0, buf, &bytesReceived, &isBinaryAnswer) == NULL)
     {
         printf("SendCmd failed!\n");
@@ -156,7 +168,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            printf("---- got %d samples\n", nBytes / samplesize);
+            printf("---- got %d samples, %d %d\n", nBytes / samplesize, *((int32_t *)dat), *((int32_t *)(dat + 4 * 3)));
             memcpy(p8, dat, nBytes);
             p8 += nBytes;
             Cnt += nBytes / samplesize; // count the samples
@@ -175,13 +187,27 @@ int main(int argc, char **argv)
     // print the results
     double scal = 1. / (double)(1 << 15); // scale to +-1
     scal *= 6.00;                         // now you have data in volts
+    scal     = 1.f;
     int cols = nChan;
     int rows = Cnt;
+    if (isBio)
+    {
+        cols += 1;
+        scal = 2.4f / 32768. / 65536.;
+    }
     for (i = 0; i < rows; i++)
     {
         int k;
         printf("data[%d]:", i);
-        for (k = 0; k < cols; k++) printf(" %1.5f", scal * (double)p16[cols * i + k]);
+        if (isBio) //  Biodaq devices have 32 bit data and an index
+        {
+            printf(" (ind=%d)", p32[cols * i]); // the index
+            for (k = 1; k < cols; k++) printf(" %1.5f", scal * (double)p32[cols * i + k]);
+        }
+        else
+        {
+            for (k = 0; k < cols; k++) printf(" %1.5f", scal * (double)p16[cols * i + k]);
+        }
         printf("\n");
     }
     printf("---- all ok Cnt =%d\n", Cnt);

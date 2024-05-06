@@ -1,17 +1,17 @@
 function demo1
     fprintf('-------------------------------- demo1.m -------------------\n');
-    a = multidaq; % create object
+    a = multidaq('ID', '2'); % create object
     A = a.listdevices();
 
-    if length(A) != 1
-        printf("no device or multiple devices present");
+    if length(A) ~= 1
+        fprintf("no device or multiple devices present");
         return;
     end
 
-    hasAdc32 = 0;
+    hasAdc32 = false;
 
     if strncmp(A{1}, "bio", 3) == 1
-        hasAdc32 = 1;
+        hasAdc32 = true;
     end
 
     %----------- open the first detected device
@@ -69,7 +69,7 @@ function demo1
     % next 3 cols are acc data of imu2 and so on
 
     if a.nImu6 == 0
-        printf("Plot now \n")
+        fprintf("Plot now \n")
         disp(result)
         plot(result);
         title('adc Measurement')

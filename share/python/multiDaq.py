@@ -21,34 +21,40 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import atexit
 import ctypes
-
-# from ctypes import byref
-from sys import exit  # to keep pyinstaller happy
+import os
+import platform
+import sys
+import time
 
 import numpy
-import atexit
-import platform
-import time
+
+# from ctypes import byref
 
 
 class multiDaqLowLevel:
     # ------------------------------------------------------------------------
-    def __init__(self, dllPathName=""):
-
-        self.isDebug = False
+    def __init__(self, dllPathName="", debug=False):
+        self.isDebug = debug
+        self.hasAdc32 = False
         my_os = platform.system()
+        print("dllpath", dllPathName)
         if len(dllPathName) == 0:
             if my_os == "Linux":
                 self.mydll = ctypes.CDLL("/usr/local/lib/libbiovisionMultiDaq.so")
             else:
-                self.mydll = ctypes.CDLL("c:\\bin\\biovisionMultiDaq.dll")
+                os.add_dll_directory(os.getcwd())
+                filna = os.getcwd() + "\\biovisionMultiDaq.dll"
+                print("dllpath", filna)
+                self.mydll = ctypes.CDLL(filna, winmode=0)
         else:
             if my_os == "Linux":
                 self.mydll = ctypes.CDLL(dllPathName + "/libbiovisionMultiDaq.so")
             else:
-                self.mydll = ctypes.CDLL(dllPathName + "/biovisionMultiDaq.dll")
-        self.masterID = -1
+                self.mydll = ctypes.CDLL(
+                    dllPathName + "/biovisionMultiDaq.dll", winmode=0
+                )
         self.mydll.multiDaqInit.argtypes = (ctypes.c_int,)
         self.mydll.multiDaqInit.restype = ctypes.c_int
         self.mydll.multiDaqDeInit.restype = ctypes.c_int
@@ -119,51 +125,28 @@ class multiDaqLowLevel:
         # const char *DLLCALL multiDaqGetVersion(void);
         self.mydll.multiDaqGetVersion.restype = ctypes.c_char_p
         self.mydll.multiDaqSendCmdWhileStreaming.restype = ctypes.c_int
-        #    int DLLCALL registerAsMaster(void);
-        # self.mydll.registerAsMaster.argtypes = (ctypes.c_int,)
-        self.mydll.tMsgInit.restype = ctypes.c_int
-        self.mydll.tMsgRegisterAsMaster.restype = ctypes.c_int
-        #    int DLLCALL registerAsSlave(void);
-        # self.mydll.registerAsSlave.argtypes = (ctypes.c_int,)
-        self.mydll.tMsgRegisterAsSlave.restype = ctypes.c_int
-        #    int DLLCALL unregisterAsMaster(int);
-        self.mydll.tMsgUnregisterAsMaster.argtypes = (ctypes.c_int,)
-        self.mydll.tMsgUnregisterAsMaster.restype = ctypes.c_int
-        #    int DLLCALL unregisterAsSlave(int);
-        self.mydll.tMsgUnregisterAsSlave.argtypes = (ctypes.c_int,)
-        self.mydll.tMsgUnregisterAsSlave.restype = ctypes.c_int
-        #    int DLLCALL sendMsgToSlave(char *, int address);
-        self.mydll.tMsgSendMsgToSlave.argtypes = (
-            ctypes.c_char_p,
+
+        self.mydll.sdl2Window.argtypes = (
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
             ctypes.c_int,
         )
-        self.mydll.tMsgSendMsgToSlave.restype = ctypes.c_int
-        #    int DLLCALL tMsgSendMsgToAllSlaves(char *in)
-        self.mydll.tMsgSendMsgToAllSlaves.argtypes = (ctypes.c_char_p,)
-        self.mydll.tMsgSendMsgToSlave.restype = ctypes.c_int
-        #    int DLLCALL sendMsgToMaster(char *, int address);
-        self.mydll.tMsgSendMsgToMaster.argtypes = (
-            ctypes.c_char_p,
+        self.mydll.sdl2Window.restype = ctypes.c_int
+
+        self.mydll.sdl2WindowConfigure.argtypes = (
+            ctypes.c_int,
             ctypes.c_int,
         )
-        self.mydll.tMsgSendMsgToMaster.restype = ctypes.c_int
-        #    int DLLCALL getMasterMsg(char *, int address);
-        self.mydll.tMsgGetMasterMsg.argtypes = (ctypes.c_char_p, ctypes.c_int)
-        self.mydll.tMsgGetMasterMsg.restype = ctypes.c_int
-        #    int DLLCALL getSlaveMsg(char *, int address);
-        self.mydll.tMsgGetSlaveMsg.argtypes = (ctypes.c_void_p, ctypes.c_int)
-        self.mydll.tMsgGetSlaveMsg.restype = ctypes.c_int
-        self.mydll.tMsgGetTimeStamps.restype = ctypes.c_int
-        self.mydll.tMsgGetTimeStamps.argtypes = (
-            ctypes.c_void_p,
-            ctypes.c_int,
-        )
+        self.mydll.sdl2WindowConfigure.restype = ctypes.c_int
+
+        # void function: self.mydll.sdl2KillWindow.argtypes = ctypes.c_void
+        self.mydll.sdl2KillWindow.restype = ctypes.c_int
 
         self.scratch_c = (ctypes.c_int16 * 256000)()  # c buffer to receive samples
+        self.scratch_c32 = ctypes.cast(self.scratch_c, ctypes.POINTER(ctypes.c_int32))
         self.scratch_ts = (ctypes.c_int64 * 16)()  # c buffer to receive timestamps
-        ans = self.tMsgInit()
-        if ans != 0:
-            print("class multiDaq(): warning tMsgSystem not available")
+        self.isGraphicOpen = False
         ans = self.mydll.multiDaqInit(0)  # 1 means output debug messages
         if ans != 0:
             try:
@@ -179,8 +162,10 @@ class multiDaqLowLevel:
             print("multiDaqLowLevel(): Running cleanup")
         # self.mydll.sendCmd("abort\n*rst", True, True)
         ans = self.mydll.multiDaqDeInit()
-        if ans != 0:
+        if self.isDebug and ans != 0:
             print("multiDaqLowLevel(): fatal Error in cleanup, deinit failed", ans)
+        if self.isGraphicOpen:
+            self.mydll.killSdl2Window()
 
     # ------------------------------------------------------------------------
     def setDebugFlag(self, flag):
@@ -201,6 +186,12 @@ class multiDaqLowLevel:
 
     # ------------------------------------------------------------------------
     def open(self, dev, devId):
+        print("LL open", devId)
+        if devId.startswith("bio"):
+            print("LL detected ADC32")
+            self.hasAdc32 = True
+        else:
+            self.hasAdc32 = False
         if self.mydll.multiDaqOpen(dev, ctypes.c_char_p(devId.encode())) == 0:
             return True
         if self.isDebug:
@@ -265,11 +256,6 @@ class multiDaqLowLevel:
         return ans
 
     # ------------------------------------------------------------------------
-    def tMsgInit(self):
-        ans = self.mydll.tMsgInit()
-        return ans
-
-    # ------------------------------------------------------------------------
     def getVersion(self):
         ans = self.mydll.multiDaqGetVersion()
         return ans
@@ -289,71 +275,6 @@ class multiDaqLowLevel:
         if self.isDebug:
             print("disableTx(): failed")
         return False
-
-    # ------------------------------------------------------------------------
-    def registerAsMaster(self):
-        self.masterID = self.mydll.tMsgRegisterAsMaster()
-        print("masterID =", self.masterID)
-
-    # ------------------------------------------------------------------------
-    def unregisterAsMaster(self):
-        self.mydll.tMsgUnregisterAsMaster(self.masterID)
-
-    # ------------------------------------------------------------------------
-    def sendMsgToSlave(self, dev, msg):
-        msg = str(msg).encode()
-        b = ctypes.c_int()
-        if self.isDebug:
-            print("sendMsg2Slave():", msg)
-        b = self.mydll.tMsgSendMsgToSlave(msg, dev)
-        if b < 0:
-            return False
-        else:
-            return True
-
-    # ------------------------------------------------------------------------
-    def getMsgFromSlave(self, dev):
-        tmp = (ctypes.c_char * 256)()
-        ans = self.mydll.tMsgGetSlaveMsg(
-            ctypes.addressof(tmp),
-            ctypes.c_int(dev),
-        )
-        if ans != 0:
-            # print("ppppp")
-            return False
-        ans = numpy.ctypeslib.as_array(tmp[0:256], ctypes.c_char)
-        if self.isDebug:
-            print("gotfromSlave():", ans)
-        return ans
-
-    # ------------------------------------------------------------------------
-    def sendMsgToAllSlaves(self, msg):
-        msg = str(msg).encode()
-        if self.isDebug:
-            print("sendMsg2Slave():", msg)
-        return self.mydll.tMsgSendMsgToAllSlaves(msg)
-
-    # ------------------------------------------------------------------------
-    def getMsgResponseCmd(self, dev, cmd, timeout=1):
-        # print("test(", dev, ")", cmd)
-        ans = self.sendMsgToSlave(dev, cmd)
-        if not ans:
-            print("send failed")
-            return False
-        xCnt = 0
-        t0 = time.time()
-        while True:
-            ans = self.getMsgFromSlave(dev)
-            if not ans:
-                xCnt = xCnt + 1
-                continue
-            else:
-                break
-            if time.time() - t0 > timeout:
-                print("Message timeouted")
-                return b""
-        # print("Cnt=", xCnt)
-        return ans
 
     # ------------------------------------------------------------------------
     def sendCmd(self, dev, cmd, isStreaming=False):
@@ -395,6 +316,10 @@ class multiDaqLowLevel:
         sampleSize = self.mydll.multiDaqGetSampleSize(
             ctypes.c_int(dev),
         )
+        print("samplesize", sampleSize)
+        if sampleSize == 0:
+            print("Error multiDaq(): device is not configured properly")
+            return False
         # print("got sampleSize =", sampleSize)
         nBytes = self.mydll.multiDaqGetStreamingData(
             ctypes.c_int(dev),
@@ -412,14 +337,27 @@ class multiDaqLowLevel:
         if nBytes < 0:
             if self.isDebug:
                 print("Error in getStreamingData: (-2 means timeouted)", nBytes)
-            return False
-        ups = numpy.ctypeslib.as_array(
-            self.scratch_c[0 : int(nBytes / 2)], ctypes.c_int16
-        )
-        ups = ups.reshape((int(nBytes / int(sampleSize)), int(sampleSize / 2)))
-        pups = ups.astype(float)
-        # TODO scaling
-        return pups
+            if nBytes == -2:  # that is timeout
+                nBytes = 0
+            else:  # severe error
+                return False
+        if self.hasAdc32:
+            dat16 = numpy.ctypeslib.as_array(self.scratch_c32[0 : int(nBytes / 4)])
+            dat16 = dat16.reshape((int(nBytes / int(sampleSize)), int(sampleSize / 4)))
+        else:
+            dat16 = numpy.ctypeslib.as_array(self.scratch_c[0 : int(nBytes / 2)])
+            dat16 = dat16.reshape((int(nBytes / int(sampleSize)), int(sampleSize / 2)))
+        # ret = dat16.astype(float)
+        return dat16
+
+    # ------------------------------------------------------------------------
+    def configGraph(self, posx, posy, width, height):
+        self.mydll.sdl2Window(int(posx), int(posy), int(width), int(height))
+        self.mydll.sdl2WindowConfigure(0, 10000)
+
+    # ------------------------------------------------------------------------
+    def killGraph(self):
+        self.mydll.sdl2KillWindow()
 
 
 class multiDaq:
@@ -427,16 +365,14 @@ class multiDaq:
     def __init__(self, devNum=0, dllPathName=""):
         self.devID = devNum
         self.LL = multiDaqLowLevel(dllPathName)
+        self.clearConfig()
+        self.configError = False
+        self.hasAdc32 = False
         # self.LL.setDebugFlag(True)
-        self.rangesAdc32 = []
-        self.rangesAdc16 = []
-        self.rangesImu6 = []
-        self.cfgInfo = (0, 0, 0)
-        print("Init complete")
 
     # ------------------------------------------------------------------------
     def cleanup(self):
-        print("Cleanup")
+        pass
 
     # ------------------------------------------------------------------------
     def listDevices(self):
@@ -445,6 +381,10 @@ class multiDaq:
     # ------------------------------------------------------------------------
     def open(self, idString, doTest=False):
         ret = self.LL.open(self.devID, idString)
+        if idString.startswith("bio"):
+            self.hasAdc32 = True
+        else:
+            self.hasAdc32 = False
         if not ret:
             return False
         if doTest:
@@ -457,12 +397,36 @@ class multiDaq:
         return self.LL.close(self.devID)
 
     # ------------------------------------------------------------------------
-    def addAdc16(self, range):
-        if range != 6:
+    def addAdc16(self, range=6):
+        if self.hasAdc32:
             return False
-        if len(self.rangesAdc16) >= 7:
+        if range != 6:
+            self.configError = True
+            return False
+        if len(self.rangesAdc16) > 7:
+            self.configError = True
             return False
         self.rangesAdc16.append(range)
+        return True
+
+    # ------------------------------------------------------------------------
+    def addAdc32(self, amplification=1):
+        if not self.hasAdc32:
+            print("has no ADC32")
+            return False
+        if (
+            amplification != 1
+            and amplification != 2
+            and amplification != 4
+            and amplification != 8
+            and amplification != 12
+        ):
+            self.configError = True
+            return False
+        if len(self.preampAdc32) > 7:
+            self.configError = True
+            return False
+        self.preampAdc32.append(amplification)
         return True
 
     # ------------------------------------------------------------------------
@@ -473,21 +437,26 @@ class multiDaq:
         for xx in dings:
             cc.append(int(xx))
         if len(cc) < 3:
+            self.configError = True
             return False
         if self.cfgInfo[2] + 1 > cc[2]:
+            self.configError = True
             return False
         self.rangesImu6.append((rangeAcc, rangeGyro))
         return True
 
     # ------------------------------------------------------------------------
     def clearConfig(self):
+        self.preampAdc32 = []
         self.rangesAdc16 = []
         self.rangesImu6 = []
         self.cfgInfo = (0, 0, 0)
+        self.configError = False
 
     # ------------------------------------------------------------------------
     def setSampleRate(self, sr):
         if len(self.LL.sendCmd(self.devID, "conf:sca:rat " + str(sr))):
+            self.configError = True
             return False
         return True
 
@@ -495,8 +464,16 @@ class multiDaq:
     def configure(self):
         nImu6 = len(self.rangesImu6)
         nAdc16 = len(self.rangesAdc16)
-        self.scale = (1 / 32768) * numpy.ones((1, nImu6 * 6 + nAdc16))
+        nAdc32 = len(self.preampAdc32)
+        if self.hasAdc32:
+            self.scale = (2.4 / (32768.0 * 65536.0)) * numpy.ones((1, nAdc32))
+        else:
+            self.scale = (1 / 32768) * numpy.ones((1, nImu6 * 6 + nAdc16))
         cnt = 0
+        for i in range(nAdc32):
+            self.scale[0, cnt] /= self.preampAdc32[i]
+            print("scal", self.scale[0, cnt])
+            cnt += 1
         for i in range(nAdc16):
             self.scale[0, cnt] *= self.rangesAdc16[i]
             cnt += 1
@@ -509,7 +486,27 @@ class multiDaq:
             self.scale[0, cnt + 4] *= x[1]
             self.scale[0, cnt + 5] *= x[1]
             cnt += 6
-        cmd = "conf:dev 0,%d,%d" % (nAdc16, nImu6)
+        if nAdc16 > 0:
+            cmd = ""
+            cnt = 0
+            for x in self.rangesAdc16:
+                cmd += "conf:sca:gai " + str(cnt) + "," + str(x) + "\n"
+                cnt += 1
+            print(cmd)
+            if len(self.LL.sendCmd(self.devID, cmd)):
+                print("Config Range Adc16 failed")
+                return False
+        if nAdc32 > 0:
+            cmd = ""
+            cnt = 0
+            for x in self.preampAdc32:
+                cmd += "conf:sca:gai " + str(cnt) + "," + str(x) + "\n"
+                cnt += 1
+            if len(self.LL.sendCmd(self.devID, cmd)):
+                print("Config Gain failed")
+                return False
+        cmd = "conf:dev %d,%d,%d" % (nAdc32, nAdc16, nImu6)
+        print(cmd)
         if len(self.LL.sendCmd(self.devID, cmd)):
             print("Config failed")
             return False
@@ -519,7 +516,13 @@ class multiDaq:
 
     # ------------------------------------------------------------------------
     def startSampling(self):
+        if self.configError:
+            print("Could not start Sampling: cause Config Error")
+            print("Exit now")
+            sys.exit(1)
+            return False
         self.LL.sendCmd(self.devID, "init", True)
+        return True
 
     # ------------------------------------------------------------------------
     def stopSampling(self):
@@ -537,15 +540,75 @@ class multiDaq:
         return True
 
     # ------------------------------------------------------------------------
+    def setTrigger(self, val):
+        if int(val) == 1:
+            val = True
+        if int(val) == 0:
+            val = False
+        if val:
+            cmd = "trig:set 1"
+        else:
+            cmd = "trig:set 0"
+        print(cmd)
+        self.LL.sendCmd(self.devID, cmd, True)
+        return True
+
+    # ------------------------------------------------------------------------
+    def configureTrigger(self, lev="level", arg1="", arg2="2000", arg3="-2000"):
+        print("configureTrigger()", lev, arg1, arg2)
+        if not (lev == "level" or lev == "pulse" or lev == "schmitt"):
+            print("shit")
+            return False
+        if lev == "schmitt":
+            print("schmitt")
+            if int(arg1) < 0 or int(arg1) > 7:
+                print(
+                    "configureTrigger(): arg1 (chan Number)  must be from 0 to 7 in mode schmitt"
+                )
+                return False
+            cmd = (
+                "conf:trig:mode "
+                + lev
+                + ","
+                + str(arg1)
+                + ","
+                + str(arg2)
+                + ","
+                + str(arg3)
+            )
+        if lev == "level":
+            print("Level")
+            cmd = "conf:trig:mode level"
+        if lev == "pulse":
+            print("Pulse")
+            cmd = "conf:trig:mode pulse"
+            if int(arg1) < 1:
+                print("Err")
+                return False
+            cmd += "," + str(arg1)
+            print(cmd)
+
+        ans = self.LL.sendCmd(self.devID, cmd)
+        print("Ans", ans)
+        if len(ans) > 0:
+            print("what")
+            return False
+        return True
+
+    # ------------------------------------------------------------------------
     def getStreamingData(self):
-        A = self.LL.getStreamingData(self.devID)
-        # TODO scale
+        tmp = self.LL.getStreamingData(self.devID)
+        A = tmp.astype(float)
+
+        offs = 0
+        if self.hasAdc32:
+            offs = 1
         for i in range(self.scale.size):
-            A[:, i] *= self.scale[0, i]
+            A[:, i + offs] *= self.scale[0, i]
+        if self.hasAdc32:
+            return A[:, 1 : self.scale.size + 1]
         return A
 
     # ------------------------------------------------------------------------
     def getVersionInfo(self):
         return self.LL.getVersion()
-
-

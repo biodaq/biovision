@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
     char        result[1024];
     const char *tmp; // this is a cstring of lines with LF as separator
-    printf("\n########################### info.exe\n");
+    printf("\n########################### biovisionDevInfo\n");
     printf("\nResult DLL Version: %s\n\n", multiDaqGetVersion());
 
     tmp = multiDaqListDevices();              // this is a cstring of lines with LF as separator

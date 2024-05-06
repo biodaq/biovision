@@ -70,8 +70,7 @@ static void moduleExit(void) // TODO aufräumen
     if (isInitialized)
         multiDaqDeInit();
     isInitialized = 0;
-    if (debugLevel)
-        mexPrintf("matlab: moduleExit()\n");
+    if (debugLevel) mexPrintf("matlab: moduleExit()\n");
 }
 /*--------------------------------------------------------------------------------*\
 \*--------------------------------------------------------------------------------*/
@@ -245,7 +244,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         {
             if (mxGetM(prhs[i]) != 1)
             {
-                mexPrintf("should not be, len = %d\n", mxGetN(prhs[i]));
+                if (debugLevel) ("should not be, len = %d\n", mxGetN(prhs[i]));
                 mexErrMsgIdAndTxt(myMatlabId, "biovision_multidaq allows only one dimensional char arrays as parameter");
             }
             params[i]   = mxGetData(prhs[i]);
@@ -280,14 +279,9 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         int selectedPort = 0;
         if (num_params != 2)
             mexErrMsgIdAndTxt(myMatlabId, "Command Get needs one parameter, the channel number");
-        {
-            i = atoi(params[1]);
-            if (i == 0 || i > MAX_NUM_PORTS)
-                mexErrMsgIdAndTxt(myMatlabId, "Command parameter out of Range, valid is 1 to MAX_NUM_PORTS");
-            portNum = i - 1;
-            if (isOpen[selectedPort] == 0)
-                mexErrMsgIdAndTxt(myMatlabId, "selected port is not open");
-        }
+        i = atoi(params[1]);
+        if (i == 0 || i > MAX_NUM_PORTS)
+            mexErrMsgIdAndTxt(myMatlabId, "Command parameter out of Range, valid is 1 to MAX_NUM_PORTS");
         portNum = i - 1;
         if (isOpen[portNum])
         {
@@ -406,8 +400,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         if (i == 0 || i > MAX_NUM_PORTS)
             mexErrMsgIdAndTxt(myMatlabId, "Command open needs a string as parameter, valid Range is from 1 to MAX_NUM_PORTS");
         portNum = i - 1;
-        if (debugLevel)
-            mexPrintf("open %s\n", params[2]);
+        if (debugLevel) mexPrintf("open %s\n", params[2]);
         char *p     = params[2];
         int   count = 0;
         for (i = 0; p[i]; i++)
@@ -429,8 +422,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         else if (strncmp(p, "bio", 3) == 0)
         {
             sampFormat[portNum] = 4;
-            if (debugLevel)
-                mexPrintf("####: sampformat = 4\n", params[2], p);
+            if (debugLevel) mexPrintf("####: sampformat = 4\n", params[2], p);
         }
         else if (strncmp(p, "logger", 6) == 0)
         {
@@ -529,8 +521,8 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         {
 
             answerString = multiDaqSendCmd(portNum, params[2], &len, &isBinaryAnswer);
-            // printf("sampleSizesfromdriver = %d\n", multiDaqGetSampleSize(portNum));
-            // printf("sampleSizesorig = %d\n", sampSize[portNum]);
+            // mexPrintf("sampleSizesfromdriver = %d\n", multiDaqGetSampleSize(portNum));
+            // mexPrintf("sampleSizesorig = %d\n", sampSize[portNum]);
             // remove trailing \n\r
             char *p = answerString;
             while (*p) p++;

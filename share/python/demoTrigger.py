@@ -20,7 +20,13 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import os
+
+"""
+you may connect the triggeroutput to analog input 2 of the box
+and connect input 1 to a suitable signal
+if configured as schmitt trigger, you can see the trigger output
+and the signal on input 1
+"""
 import platform
 import time
 from sys import exit  # to keep pyinstaller happy
@@ -49,7 +55,7 @@ def plotresults(input, title, ylabel):
 
 if __name__ == "__main__":
     # You may open up to 4 devices parallel with different IDs ( from 0 ... 3 )
-    # dev = multiDaq() # default uses channel 0 and dll in working directory
+    # dev = multiDaq() # default uses channel 0
     # dev = multiDaq(2) # uses channel 2
     # dev = multiDaq(2,"path/to/DLL") # uses channel 2 and path to dll
     # dev = multiDaq(1,"c:/bin")
@@ -57,18 +63,8 @@ if __name__ == "__main__":
 
     my_os = platform.system()
 
-    if my_os == "Windows":
-        # check wether the dll exists in your working directory
-        # if not, the dll has to be in $PATH
-        pathname = os.getcwd()
-        if not os.path.isfile(pathname + "/biovisionMultiDaq.dll"):
-            pathname = ""
-            print("No DLL found. Try to find the DLL in $PATH")
-        else:
-            print("found DLL in my Path:", pathname)
-        dev = multiDaq(0, pathname)
-    else:
-        dev = multiDaq()
+    # on windows you may specify the DLL, example: msgDev = multiDaq("c:/bin")
+    dev = multiDaq()
 
     print("Version of DLL:", dev.getVersionInfo())
 
@@ -79,6 +75,7 @@ if __name__ == "__main__":
     if not dev.open(A[0]):
         print("open() failed: Device Busy? exit now")
         exit(1)
+    print(A)
 
     # ------------------ configure the device ------------------------
     dev.clearConfig()
@@ -86,44 +83,70 @@ if __name__ == "__main__":
         print("fatal: Could not set samplerate")
         exit(1)
     # mitigate error handling, it will cause error in configure()
-    dev.addAdc16(6)  # only range = 6 for Adc16 allowed at the moment
-    dev.addAdc16(6)
+    if A[0].startswith("bio"):  # has 32 bit ADC
+        dev.addAdc32(1)
+        dev.addAdc32()
+    else:
+        dev.addAdc16(6)
+        dev.addAdc16(6)
     # dev.addImu6(3, 250)
-
+    # it is an good idea to set the outputlevel to a defined state
+    dev.configureTrigger("pulse", 20)
+    time.sleep(0.3)
+    # dev.setTrigger("0")
+    """
+    if not dev.configureTrigger("schmitt", "0", "10000", "5000"):
+        print("fatal: could not configure the trigger")
+        exit(1)
+    """
     # minimal errorhandling should be done before startSampling !
     if not dev.configure():  # last command before startSampling()
         print("Fatal: Config failed")
         exit(1)
-
+    for i in range(10):
+        print(dev.LL.sendCmd(0, "conf:dev:stat?"))
+        time.sleep(0.01)
+    # for best synchronisation between startsampling and setTrigger()
+    dev.disableTx()
     dev.startSampling()
+    dev.setTrigger(True)
+    dev.enableTx()
 
     # ------------------------------------ aquisition loop ------------------------
     gotFirstData = False
-    for i in range(20):
-        time.sleep(0.1)
+    toggle = False
+    for i in range(10):
+        time.sleep(0.2)
+        dev.setTrigger(True)  # use toggle for level
+        toggle = not toggle
         x = dev.getStreamingData()
-        print("got data", x.shape)
+        print("got data", x.shape, "toggle =", toggle)
         if x.size > 0:
             if not gotFirstData:
                 gotFirstData = True
                 xAll = x
             else:
                 xAll = numpy.vstack((xAll, x))
-
     dev.stopSampling()
     dev.close()
-
     # cfgInfo ist a tupel with content (nAdc32,nAdc16,nImu)
     # or (nAdc32,nAdc16,nImu,nAux) {if Aux is employed}
     if dev.cfgInfo[0] > 0:
         print("may happen in future, till now it is handled as an Error")
-        exit(1)
-    start = dev.cfgInfo[0]  # here Adc16 data starts
-    if dev.cfgInfo[1] > 0:  # plot all analog channels in one plot
-        plotresults(xAll[:, start : start + dev.cfgInfo[1]], "analogdata", "[V]")
+        # exit(1)
+    # plotresults(xAll[:, 1:4], "analogdata", "[V]")
+    plotresults(xAll, "analogdata", "[V]")
 
-    start = dev.cfgInfo[0] + dev.cfgInfo[1]  # here imu data starts
+    startidx = 0  # dev.cfgInfo[0]  # here Adc16 data starts
+    if dev.cfgInfo[1] > 0:  # plot all analog channels in one plot
+        plotresults(xAll, "analogdata", "[V]")
+
+    startidx = dev.cfgInfo[0] + dev.cfgInfo[1]  # here imu data starts
     for i in range(dev.cfgInfo[2]):
-        plotresults(xAll[:, start : start + 3], "Acceleration IMU " + str(i + 1), "[g]")
-        plotresults(xAll[:, start + 3 : start + 6], "Gyro IMU " + str(i + 1), "[°/s]")
-        start += 6
+        plotresults(
+            xAll[:, startidx : startidx + 3], "Acceleration IMU " + str(i + 1), "[g]"
+        )
+        plotresults(
+            xAll[:, startidx + 3 : startidx + 6], "Gyro IMU " + str(i + 1), "[°/s]"
+        )
+        startidx += 6
