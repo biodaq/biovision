@@ -21,8 +21,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import time
+from sys import exit  # to keep pyinstaller happy
+
 from multiDaq import multiDaqLowLevel
 
+# on windows you may specify the DLL, example: myDev = multiDaqLowLevel("c:/bin")
 myDev = multiDaqLowLevel()
 # myDev.setDebugFlag(True)
 

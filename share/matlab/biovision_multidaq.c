@@ -39,7 +39,7 @@
 #define MAX_ANSWER_LEN      16384
 #define MAX_SIZE_PORTNAME   256
 
-static const char *myMatlabId = "biovision:error";
+static const char *myMatlabId = "biovision_multidaq";
 
 static int debugLevel    = 0;
 static int isRegistered  = 0;
@@ -244,7 +244,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         {
             if (mxGetM(prhs[i]) != 1)
             {
-                if (debugLevel) ("should not be, len = %d\n", mxGetN(prhs[i]));
+                if (debugLevel) mexPrintf("should not be, len = %d\n", mxGetN(prhs[i]));
                 mexErrMsgIdAndTxt(myMatlabId, "biovision_multidaq allows only one dimensional char arrays as parameter");
             }
             params[i]   = mxGetData(prhs[i]);
@@ -388,7 +388,7 @@ void mexFunction(int nlhs, mxArray *plhs[],       // outputs
         multiDaqDeInit();
         // isRegistered = 0;
         if (!isInitialized)
-            mexErrMsgIdAndTxt(myMatlabId, "Nothing to do in Deinit, did you call it twice?");
+            mexWarnMsgIdAndTxt(myMatlabId, "Nothing to do in Deinit, did you call it twice?");
         isInitialized = 0;
     }
     //------------------------------------------------------------------------
