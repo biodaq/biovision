@@ -23,7 +23,7 @@
 import time
 from sys import exit  # to keep pyinstaller happy
 
-from multiDaq import multiDaqLowLevel
+from multidaq import multiDaqLowLevel
 
 # on windows you may specify the DLL, example: myDev = multiDaqLowLevel("c:/bin")
 myDev = multiDaqLowLevel()

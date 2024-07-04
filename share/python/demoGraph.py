@@ -26,7 +26,7 @@ import time
 
 # import matplotlib.pyplot as plt
 # import numpy
-from multiDaq import multiDaq
+from multidaq import multiDaq
 
 if __name__ == "__main__":
     # You may open up to 4 devices parallel with different IDs ( from 0 ... 3 )

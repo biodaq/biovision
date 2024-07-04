@@ -5,6 +5,14 @@ INSTALLPATH=/usr/local
 sudo mkdir -p $INSTALLPATH/bin
 sudo mkdir -p $INSTALLPATH/lib
 sudo mkdir -p $INSTALLPATH/include
+
+echo install SDL2
+sudo apt-get install libsdl2-2.0-0 libsdl2-ttf-2.0-0 libsdl2-image-2.0-0
+if [ $? -ne 0 ]; then
+   echo "Error occurred!"
+   exit 1
+fi
+
 echo install library
 sudo cp lib/libbiovisionMultiDaq.so $INSTALLPATH/lib/libbiovisionMultiDaq.so
 if [ $? -ne 0 ]; then

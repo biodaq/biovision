@@ -3,10 +3,9 @@
 
 ## content
 
-* **multiDaq.py**  
-This is the base interface for measurements.  
-contains a high level class and a low level class.  
-The low level class is accessible for high level class.  
+* **multidaq**
+folder with the modules for measurements.
+it contains the module files (e.g. multidaq.py)
 
 * **demo1.py**  
 example, how to handle low level class ( multiDaqLowLevel() )
@@ -32,23 +31,31 @@ shows monitoring Graphic window during a measurement
 * for demoHighLevel.py matplotlib too
 
 Install in terminal:
-```
+```bash
 pip install numpy
 pip install matplotlib
 ```
-Hopefully thats it.
-
-## run
-
-**Windows**
-
-
-You need biovisionMultiDaq.dll in Path or in your working directory.
-
 
 **Linux**
 
-drivers must be installed. Run install.sh in the root folder, if not done yet.
+SDL must be installed, because drivers depend on it.
+install.sh in the root folder will do that job.
+If you do not want to install the drivers with install.sh, open a command terminal:
 
+```bash
+sudo apt-get install libsdl2-2.0-0 libsdl2-ttf-2.0-0 libsdl2-image-2.0-0
+```
+
+
+## run
+
+needed DLLs are integrated in the module now, so nothing is to install.
+
+
+We also offer our modules on PyPI. You may install multidaq with pip in a normal way.
+('pip install multidaq') Then the folder multidaq in share/python/ can be deleted.
+It is not needed any more.
+
+If you do that way, the via pip installed module will be used automaticly instead.
 
  

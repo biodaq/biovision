@@ -24,7 +24,7 @@ import time
 from sys import exit  # to keep pyinstaller happy
 
 import numpy
-from multiDaq import multiDaqLowLevel
+from multidaq import multiDaqLowLevel
 
 # on windows: specify the path, where the DLL is
 #             or it will search in system paths

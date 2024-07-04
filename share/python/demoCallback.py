@@ -26,7 +26,7 @@ import time
 from sys import exit  # to keep pyinstaller happy
 
 import numpy
-from multiDaq import multiDaq
+from multidaq import multiDaq
 
 myScaling = []
 

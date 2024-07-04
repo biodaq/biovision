@@ -27,7 +27,7 @@ from sys import exit  # to keep pyinstaller happy
 
 import matplotlib.pyplot as plt
 import numpy
-from multiDaq import multiDaq
+from multidaq import multiDaq
 
 
 # -----------------------------------------------------------------------------------
