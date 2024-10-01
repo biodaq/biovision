@@ -1,25 +1,6 @@
 # Copyright (c) 2022, Tantor GmbH
 # All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 1. Redistributions of source code must retain the above copyright notice,
-#    this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer
-#    in the documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# license: MIT
 
 import atexit
 import ctypes
@@ -127,6 +108,7 @@ class multiDaqLowLevel:
 
         self.mydll.multiDaqGetSystemErrors.restype = ctypes.c_char_p
         self.mydll.multiDaqListDevices.restype = ctypes.c_char_p
+        self.mydll.multiDaqListAllDevices.restype = ctypes.c_char_p
 
         self.mydll.multiDaqGetLastError.restype = ctypes.c_char_p
         # const char *DLLCALL multiDaqGetVersion(void);
@@ -187,12 +169,15 @@ class multiDaqLowLevel:
         self.isDebug = flag
 
     # ------------------------------------------------------------------------
-    def listDevices(self):
+    def listDevices(self, listForeign=False):
         """
         list all devices on USB
         this function is accessible before the init command
         """
-        ans = self.mydll.multiDaqListDevices()
+        if listForeign:
+            ans = self.mydll.multiDaqListAllDevices()
+        else:
+            ans = self.mydll.multiDaqListDevices()
         if len(ans) == 0:
             return []
         ans = ans.decode()
@@ -284,7 +269,7 @@ class multiDaqLowLevel:
             raise TypeError("only integers are allowed")
         # tmp = (ctypes.c_int64 * 4)()
 
-        ans = self.mydll.tMsgGetTimeStamps(
+        self.mydll.tMsgGetTimeStamps(
             ctypes.addressof(self.scratch_ts),
             ctypes.c_int(dev),
         )
@@ -383,7 +368,8 @@ class multiDaqLowLevel:
             ctypes.c_int(dev),
         )
         if sampleSize == 0:
-            print("Error multiDaq(): device is not configured properly")
+            if self.isDebug:
+                print("Error multiDaq(): device is not configured properly")
             return False
         nBytes = self.mydll.multiDaqGetStreamingData(
             ctypes.c_int(dev),
@@ -424,18 +410,24 @@ class multiDaqLowLevel:
         self.mydll.sdl2KillWindow()
 
 
+# ****************************************************************************
 class multiDaq:
     # ------------------------------------------------------------------------
-    def __init__(self, devNum=0, dllPathName="",debug = False):
+    def __init__(self, devNum=0, dllPathName="", debug=False):
         """
         init
         """
         self.isDebug = debug
         self.devID = devNum
-        self.LL = multiDaqLowLevel(dllPathName,debug=debug)
+        self.LL = multiDaqLowLevel(dllPathName, debug=debug)
         self.clearConfig()
         self.configError = False
         self.hasAdc32 = False
+        self.nAux = 0
+        self.nAdc = 0
+        self.nImu6 = 0
+        self.sampleRate = -1
+        self.overSamplingAdc = int(1)
         # self.LL.setDebugFlag(True)
 
     # ------------------------------------------------------------------------
@@ -447,11 +439,11 @@ class multiDaq:
         pass
 
     # ------------------------------------------------------------------------
-    def listDevices(self):
+    def listDevices(self, listForeign=False):
         """
         return list of detected devices on USB
         """
-        return self.LL.listDevices()
+        return self.LL.listDevices(listForeign)
 
     # ------------------------------------------------------------------------
     def open(self, idString, doTest=False):
@@ -479,19 +471,19 @@ class multiDaq:
         return self.LL.close(self.devID)
 
     # ------------------------------------------------------------------------
-    def addAdc16(self, range=6):
+    def addAdc16(self, myrange=6):
         """
         add a 16 bit ADC channel to configuration list
         """
         if self.hasAdc32:
             return False
-        if range != 6:
+        if myrange != 6:
             self.configError = True
             return False
-        if len(self.rangesAdc16) > 7:
+        if len(self.rangesAdc) > 7:
             self.configError = True
             return False
-        self.rangesAdc16.append(range)
+        self.rangesAdc.append(myrange)
         return True
 
     # ------------------------------------------------------------------------
@@ -516,6 +508,7 @@ class multiDaq:
             self.configError = True
             return False
         self.preampAdc32.append(amplification)
+        self.rangesAdc.append(2.4 / amplification)
         return True
 
     # ------------------------------------------------------------------------
@@ -534,7 +527,40 @@ class multiDaq:
         if self.cfgInfo[2] + 1 > cc[2]:
             self.configError = True
             return False
+        if len(
+            self.LL.sendCmd(
+                self.devID,
+                "conf:imu:para "
+                + str(len(self.rangesImu6))
+                + ","
+                + str(rangeAcc)
+                + ","
+                + str(rangeGyro),
+            )
+        ):
+            self.configError = True
+            return False
         self.rangesImu6.append((rangeAcc, rangeGyro))
+
+        return True
+
+    # ------------------------------------------------------------------------
+    def addAux(self, nchan):
+        """
+        add an aux device with nchan channels
+        """
+        ans = self.LL.sendCmd(self.devID, "conf:sca:num?")
+        dings = ans.split(",")
+        cc = []
+        for xx in dings:
+            cc.append(int(xx))
+        if len(cc) < 4 or self.nAux != 0:
+            self.configError = True
+            return False
+        if nchan > cc[3]:
+            self.configError = True
+            return False
+        self.nAux = nchan
         return True
 
     # ------------------------------------------------------------------------
@@ -543,10 +569,11 @@ class multiDaq:
         clear configuration list
         """
         self.preampAdc32 = []
-        self.rangesAdc16 = []
+        self.rangesAdc = []
         self.rangesImu6 = []
         self.cfgInfo = (0, 0, 0)
         self.configError = False
+        self.overSamplingAdc = int(1)
 
     # ------------------------------------------------------------------------
     def setSampleRate(self, sr):
@@ -557,6 +584,25 @@ class multiDaq:
         if len(self.LL.sendCmd(self.devID, "conf:sca:rat " + str(sr))):
             self.configError = True
             return False
+        self.sampleRate = sr
+        return True
+
+    # ------------------------------------------------------------------------
+    def setOversamplingAdc(self, ovs):
+        """
+        set Oversampling of Adc
+        ovs: oversampling Faktor
+        """
+        if self.hasAdc32:
+            if ovs == 1:
+                return True
+            self.configError = True
+            return False
+        else:
+            if len(self.LL.sendCmd(self.devID, "conf:sca:ove " + str(int(ovs)))):
+                self.configError = True
+                return False
+        self.overSamplingAdc = int(ovs)
         return True
 
     # ------------------------------------------------------------------------
@@ -566,19 +612,35 @@ class multiDaq:
         configuration list must be valid
         """
         nImu6 = len(self.rangesImu6)
-        nAdc16 = len(self.rangesAdc16)
+        nAdc16 = len(self.rangesAdc)
         nAdc32 = len(self.preampAdc32)
+        self.nAdc = len(self.rangesAdc)
+        if self.hasAdc32:
+            nAdc16 = 0
+        else:
+            nAdc32 = 0
+        # if nAdc32 > 0:
+        #    nAdc16 = 0
+        if self.configError:
+            if self.isDebug:
+                print("Configuration Error")
+            return False
         if self.hasAdc32:
             self.scale = (2.4 / (32768.0 * 65536.0)) * numpy.ones((1, nAdc32))
         else:
-            self.scale = (1 / 32768) * numpy.ones((1, nImu6 * 6 + nAdc16))
+            self.scale = (1 / 32768) * numpy.ones(
+                (1, nImu6 * 6 + nAdc16 * self.overSamplingAdc)
+            )
         cnt = 0
-        for i in range(nAdc32):
-            self.scale[0, cnt] /= self.preampAdc32[i]
-            cnt += 1
-        for i in range(nAdc16):
-            self.scale[0, cnt] *= self.rangesAdc16[i]
-            cnt += 1
+        if self.hasAdc32:
+            for i in range(self.nAdc):
+                self.scale[0, cnt] /= self.preampAdc32[i]
+                cnt += 1
+        else:
+            for i in range(self.nAdc):
+                for k in range(self.overSamplingAdc):
+                    self.scale[0, cnt + k] *= self.rangesAdc[i]
+                cnt += self.overSamplingAdc
         for i in range(nImu6):
             x = self.rangesImu6[i]
             self.scale[0, cnt] *= x[0]
@@ -588,17 +650,17 @@ class multiDaq:
             self.scale[0, cnt + 4] *= x[1]
             self.scale[0, cnt + 5] *= x[1]
             cnt += 6
-        if nAdc16 > 0:
+        if self.hasAdc32 == False and nAdc16 > 0:
             cmd = ""
             cnt = 0
-            for x in self.rangesAdc16:
+            for x in self.rangesAdc:
                 cmd += "conf:sca:gai " + str(cnt) + "," + str(x) + "\n"
                 cnt += 1
             if len(self.LL.sendCmd(self.devID, cmd)):
                 if self.isDebug:
                     print("Config Range Adc16 failed")
                 return False
-        if nAdc32 > 0:
+        if self.hasAdc32 and nAdc32 > 0:
             cmd = ""
             cnt = 0
             for x in self.preampAdc32:
@@ -608,8 +670,12 @@ class multiDaq:
                 if self.isDebug:
                     print("Config Gain failed")
                 return False
-        cmd = "conf:dev %d,%d,%d" % (nAdc32, nAdc16, nImu6)
-        print(cmd)
+        if self.nAux > 0:
+            cmd = "conf:dev %d,%d,%d,%d" % (nAdc32, nAdc16, nImu6, self.nAux)
+        else:
+            cmd = "conf:dev %d,%d,%d" % (nAdc32, nAdc16, nImu6)
+        if self.isDebug:
+            print(cmd)
         if len(self.LL.sendCmd(self.devID, cmd)):
             if self.isDebug:
                 print("Config failed")
@@ -721,7 +787,7 @@ class multiDaq:
         """
         tmp = self.LL.getStreamingData(self.devID)
         A = tmp.astype(float)
-
+        # print("Oversampling", self.overSamplingAdc)
         offs = 0
         if self.hasAdc32:
             offs = 1

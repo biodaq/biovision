@@ -107,6 +107,7 @@ extern "C"
     // little helpers to get information from biovision devices
     // returns cstring with linefeed delimited lines [or empty cstring (no device detected)]
     const char *DLLCALL multiDaqListDevices();
+    const char *DLLCALL multiDaqListAllDevices();
 
     // little helper to get the version string of the dll
     const char *DLLCALL multiDaqGetVersion(void);
