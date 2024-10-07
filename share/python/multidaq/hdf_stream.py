@@ -2,6 +2,7 @@
 # All rights reserved.
 # pubished under MIT license
 import atexit
+import time
 
 import h5py
 import numpy
@@ -53,6 +54,9 @@ class hdf_stream:
         if not self.isOpened:
             self.fp = h5py.File(filna, "w")
             self.isOpened = True
+            self.fp.attrs["description"] = "biovision data file"
+            self.fp.attrs["creator"] = "python script"
+            self.fp.attrs["timestamp"] = str(int(time.time()))
         else:
             print("error")
 
@@ -111,6 +115,14 @@ class hdf_stream:
             compression=self.compression,
             dtype=numpy.float32,
         )
+        self.adc.attrs["unit"] = "Volt"
+        self.adc.attrs["oversamplingFactor"] = int(ovs)
+        if type(names) != type(None):
+            if len(names) == len(ranges):
+                self.adc.attrs["names"] = names
+            else:
+                if self.isDebug:
+                    print("[hdf_stream] Warning, no names for ADCs stored in file")
         self.nTotal += self.nAdc * ovs
         self.ovsAdc = ovs
         return True
@@ -151,10 +163,17 @@ class hdf_stream:
             dtype=numpy.float32,
         )
         self.nTotal += self.nImu6 * 6
+        self.imu6.attrs["units"] = ["g", "grad/s"]
+        if type(names) != type(None):
+            if len(names) == len(ranges):
+                self.imu6.attrs["names"] = names
+            else:
+                if self.isDebug:
+                    print("[hdf_stream] Warning, no names for ADCs stored in file")
         return True
 
     # ------------------------------------------------------------------------
-    def addAux(self, n):
+    def addAux(self, n, name=None):
         """
         add Aux to stream
         """
@@ -175,6 +194,11 @@ class hdf_stream:
             compression=self.compression,
             dtype=numpy.int16,
         )
+        if type(name) != type(str):
+            self.aux.attrs["name"] = name
+        else:
+            if self.isDebug:
+                print("[hdf_stream] warning, no name for aucx stored")
         return True
 
     # ------------------------------------------------------------------------

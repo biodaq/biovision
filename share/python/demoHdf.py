@@ -33,8 +33,8 @@ def demoHdf():
         dev.setOversamplingAdc(1)  # 1 or 2 are valid
         dev.addAdc16(6)
         dev.addAdc16(6)
-        # dev.addImu6(3, 250)
-        # dev.addAux(2)
+        dev.addImu6(3, 250)
+        dev.addAux(2)
     # it is an good idea to set the outputlevel to a defined state
     if not dev.configure():  # last command before startSampling()
         print("Fatal: Config failed")
@@ -48,9 +48,11 @@ def demoHdf():
     )  # you may open a file with constructor hdf_stream(filename="example.h5")
     print("AdcOvs =", dev.overSamplingAdc)
     print("ranges(ADC) =", dev.rangesAdc)
-    storage.addAdc(dev.sampleRate, dev.rangesAdc, ovs=dev.overSamplingAdc)
-    storage.addImu6(dev.sampleRate, dev.rangesImu6)
-    storage.addAux(dev.nAux)
+    storage.addAdc(
+        dev.sampleRate, dev.rangesAdc, ovs=dev.overSamplingAdc, names=["ch1", "ch2"]
+    )
+    storage.addImu6(dev.sampleRate, dev.rangesImu6, names=["imu_1"])
+    storage.addAux(dev.nAux, name="rrrAux")
 
     # ------------------- measurement loop ----------------------------
     dev.startSampling()
