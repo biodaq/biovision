@@ -787,7 +787,6 @@ class multiDaq:
         """
         tmp = self.LL.getStreamingData(self.devID)
         A = tmp.astype(float)
-        # print("Oversampling", self.overSamplingAdc)
         offs = 0
         if self.hasAdc32:
             offs = 1

@@ -21,7 +21,8 @@ class hdf_stream:
             print("[hdf_stream] cleanup() registered")
         self.isOpened = False
         if len(filename):
-            self.open(filename)
+            self.fp = h5py.File(filename, "w")
+            self.isOpened = True
         self.adc = None
         self.imu6 = None
         self.aux = None
@@ -53,9 +54,9 @@ class hdf_stream:
         if not self.isOpened:
             self.fp = h5py.File(filna, "w")
             self.isOpened = True
-            self.fp.attrs["description"] = b"biovision data file"
-            self.fp.attrs["creator"] = b"python script"
-            self.fp.attrs["timestamp"] = str(int(time.time())).encode(encoding="ascii")
+            self.fp.attrs["description"] = "biovision data file"
+            self.fp.attrs["creator"] = "python script"
+            self.fp.attrs["timestamp"] = str(int(time.time()))
         else:
             print("error")
 
@@ -114,7 +115,7 @@ class hdf_stream:
             compression=self.compression,
             dtype=numpy.float32,
         )
-        self.adc.attrs["unit"] = b"Volt"
+        self.adc.attrs["unit"] = "Volt"
         self.adc.attrs["oversamplingFactor"] = int(ovs)
         if type(names) != type(None):
             if len(names) == len(ranges):
@@ -162,7 +163,7 @@ class hdf_stream:
             dtype=numpy.float32,
         )
         self.nTotal += self.nImu6 * 6
-        self.imu6.attrs["units"] = [b"g", b"grad/s"]
+        self.imu6.attrs["units"] = ["g", "grad/s"]
         if type(names) != type(None):
             if len(names) == len(ranges):
                 self.imu6.attrs["names"] = names
